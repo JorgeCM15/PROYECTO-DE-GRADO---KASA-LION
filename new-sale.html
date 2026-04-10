@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>KASA LION - Ventas</title>
+
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+                <div class="sidebar-brand-icon rotate-n-15">
+                </div>
+                <div class="sidebar-brand-text mx-3">KASA LION</div>
+            </a>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider my-0">
+
+            <!-- Nav Item - Dashboard -->
+<li class="nav-item active" id="menuPanel">
+    <a class="nav-link" href="index.html">
+        <i class="fas fa-fw fa-tachometer-alt"></i>
+        <span>Panel</span>
+    </a>
+</li>
+
+<hr class="sidebar-divider">
+
+<div class="sidebar-heading">
+    Administración
+</div>
+
+<!-- Permisos -->
+<li class="nav-item" id="menuAdmin">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo">
+        <i class="fas fa-fw fa-cog"></i>
+        <span>Permisos</span>
+    </a>
+    <div id="collapseTwo" class="collapse">
+        <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Acciones</h6>
+            <a class="collapse-item" href="users.html">Registrar usuarios</a>
+            <a class="collapse-item" href="admin-users.html">Administrar usuarios</a>
+        </div>
+    </div>
+</li>
+
+<!-- Reportes -->
+<li class="nav-item" id="menuReportes">
+    <a class="nav-link" href="reports.html">
+        <i class="fas fa-fw fa-chart-area"></i>
+        <span>Reportes</span>
+    </a>
+</li>
+
+<hr class="sidebar-divider">
+
+<div class="sidebar-heading">
+    Producción
+</div>
+
+<!-- Ventas -->
+<li class="nav-item" id="menuVentas">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages">
+        <i class="fas fa-fw fa-folder"></i>
+        <span>Ventas</span>
+    </a>
+
+    <div id="collapsePages" class="collapse">
+        <div class="bg-white py-2 collapse-inner rounded">
+            <a class="collapse-item" href="new-sale.html">Nueva Venta</a>
+            <a class="collapse-item" href="record.html">Historial</a>
+        </div>
+    </div>
+</li>
+
+<!-- Productos -->
+<li class="nav-item" id="menuProductos">
+    <a class="nav-link" href="products.html">
+        <i class="fas fa-fw fa-table"></i>
+        <span>Productos</span>
+    </a>
+</li>
+
+<hr class="sidebar-divider">
+
+<div class="sidebar-heading">
+    Gestión financiera
+</div>
+
+<!-- Finanzas -->
+<li class="nav-item" id="menuFinanzas">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities">
+        <i class="fas fa-fw fa-wrench"></i>
+        <span>Finanzas</span>
+    </a>
+    <div id="collapseUtilities" class="collapse">
+        <div class="bg-white py-2 collapse-inner rounded">
+            <a class="collapse-item" id="menuIngresos" href="income.html">Ingresos</a>
+            <a class="collapse-item" id="menuEgresos" href="expenses.html">Egresos</a>
+        </div>
+    </div>
+</li>
+
+            <!-- Sidebar Toggler (Sidebar) -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+            
+        </ul>
+        <!-- End of Sidebar -->
+            
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+                    <!-- Sidebar Toggle (Topbar) -->
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <!-- Topbar Navbar -->
+                    <ul class="navbar-nav ml-auto">
+
+                        <!-- Nav Item - User Information -->
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">User 001</span>
+                                <img class="img-profile rounded-circle"
+                                    src="img/undraw_profile.svg">
+                            </a>
+                            <!-- Dropdown - User Information -->
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Cerrar sesión
+                                </a>
+                            </div>
+                        </li>
+
+                    </ul>
+
+                </nav>
+                <!-- End of Topbar -->
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid">
+                
+                    <div class="card shadow mb-4">
+                        <div class="card-header">
+                            <strong>Nueva Venta</strong>
+                        </div>
+                    <div class="card-body">
+
+                <!-- DATOS CLIENTE -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label>Primer Nombre *</label>
+                                <input type="text" id="primerNombre" class="form-control nombre-mayus"
+                                    pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ ]+" required>
+                        </div>
+
+                    <div class="col-md-3">
+                        <label>Segundo Nombre</label>
+                            <input type="text" id="segundoNombre" class="form-control nombre-mayus">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Primer Apellido *</label>
+                            <input type="text" id="primerApellido" class="form-control nombre-mayus"
+                                pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ ]+" required>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Segundo Apellido</label>
+                            <input type="text" id="segundoApellido" class="form-control nombre-mayus">
+                    </div>
+
+                    </div>
+
+                    <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label>Tipo de Documento *</label>
+                            <select id="tipoDocumento" class="form-control" required>
+                                <option value="">Seleccione</option>
+                                <option value="CC">Cédula de Ciudadanía</option>
+                                <option value="CE">Cédula de Extranjería</option>
+                            </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Número de Documento *</label>
+                            <input type="text" id="numeroDocumento" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Correo Electrónico *</label>
+                            <input type="email" id="correo" class="form-control" required>
+                    </div>
+                </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label>Dirección *</label>
+                                <input type="text" id="direccion" class="form-control">
+                        </div>
+
+                    <div class="col-md-4">
+                        <label>Teléfono *</label>
+                            <input type="text" id="telefono" class="form-control">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Fecha Venta *</label>
+                            <input type="date" id="fechaVenta" class="form-control" required>
+                    </div>
+                    </div>
+
+                <hr>
+                    <h5>Productos *</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <select id="productoSelect" class="form-control">
+                                    <option value="">Seleccione producto</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <input type="number" id="cantidad" class="form-control" min="1" placeholder="Cantidad">
+                            </div>
+
+                            <div class="col-md-2">
+                                <button type="button" id="agregarProducto" class="btn btn-primary w-100">
+                                Agregar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Table products -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="tablaVenta">
+                                <thead>
+                                    <tr>
+                                    <th>Producto</th>
+                                    <th>Precio</th>
+                                    <th>Cantidad</th>
+                                    <th>Subtotal</th>
+                                    <th>Acción</th>
+                                    </tr>
+                                </thead>
+                            <tbody>
+                            </tbody>
+                            </table>
+                        </div>
+
+                        <div class="text-end mt-3">
+                            <h4>Total: <span id="totalVenta">$ 0</span></h4>
+                                <button type="button" id="guardarVenta" class="btn btn-primary w-60">
+                                Guardar Venta
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal-->
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Estas a punto de cerrar sesión</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">Seleccione "Cerrar sesión" a continuación si está listo para finalizar su sesión actual.</div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                    <a class="btn btn-primary" href="login.html">Cerrar sesión</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <!-- Page level plugins -->
+    <script src="vendor/chart.js/Chart.min.js"></script>
+
+    <!-- Page level custom scripts -->
+    <script src="js/demo/chart-area-demo.js"></script>
+    <script src="js/demo/chart-pie-demo.js"></script>
+
+    <script src="js/new-sale.js"></script>
+    <script src="js/auth.js"></script>
+
+</body>
+</html>
+</body>
+
+</html>
