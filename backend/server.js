@@ -21,6 +21,14 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+pool.getConnection((err, connection) => {
+  if (err) {
+    console.error("❌ Error conexión DB:", err);
+  } else {
+    console.log("✅ Conectado a MySQL");
+    connection.release();
+  }
+});
 
 // REGISTRAR USUARIOS
 app.post('/usuarios', (req, res) => {
@@ -726,6 +734,6 @@ app.get('/', (req, res) => {
   res.send('API funcionando 🚀');
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log("Servidor corriendo en puerto " + PORT);
 });
