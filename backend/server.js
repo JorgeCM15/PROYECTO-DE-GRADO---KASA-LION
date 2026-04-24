@@ -7,21 +7,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const connection = mysql.createConnection({
+const pool = mysql.createPool({
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
   database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT
+  port: process.env.MYSQLPORT,
+  ssl: {
+    rejectUnauthorized: false
+  },
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-db.connect(err => {
-    if (err) {
-        console.error("Error conexión:", err);
-        return;
-    }
-    console.log("Conectado a MySQL");
-});
 
 // REGISTRAR USUARIOS
 app.post('/usuarios', (req, res) => {
@@ -43,7 +42,7 @@ app.post('/usuarios', (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    db.query(sqlUsuario, [
+    pool.query(sqlUsuario, [
         nombres,
         primerApellido,
         segundoApellido,
@@ -70,7 +69,7 @@ app.post('/usuarios', (req, res) => {
                 VALUES ?
             `;
 
-            db.query(sqlPermisos, [valores], (err2) => {
+            pool.query(sqlPermisos, [valores], (err2) => {
                 if (err2) {
                     console.error(err2);
                     return res.status(500).json({ error: err2 });
@@ -96,7 +95,7 @@ app.post('/login', (req, res) => {
 
     const sql = "SELECT * FROM usuarios WHERE correo = ?";
 
-    db.query(sql, [correo], (err, results) => {
+    pool.query(sql, [correo], (err, results) => {
 
         if (err) {
             console.error(err);
@@ -122,7 +121,7 @@ app.post('/login', (req, res) => {
             WHERE um.usuario_id = ?
         `;
 
-        db.query(sqlModulos, [usuario.id], (err2, modulos) => {
+        pool.query(sqlModulos, [usuario.id], (err2, modulos) => {
 
             if (err2) {
                 console.error(err2);
@@ -157,7 +156,7 @@ app.get('/usuarios', (req, res) => {
         GROUP BY u.id
     `;
 
-    db.query(sql, (err, results) => {
+    pool.query(sql, (err, results) => {
 
         if (err) {
             console.error(err);
@@ -174,9 +173,9 @@ app.delete('/usuarios/:id', (req, res) => {
 
     const id = req.params.id;
 
-    db.query('DELETE FROM usuario_modulos WHERE usuario_id = ?', [id], () => {
+    pool.query('DELETE FROM usuario_modulos WHERE usuario_id = ?', [id], () => {
 
-        db.query('DELETE FROM usuarios WHERE id = ?', [id], (err) => {
+        pool.query('DELETE FROM usuarios WHERE id = ?', [id], (err) => {
 
             if (err) return res.status(500).json(err);
 
@@ -193,7 +192,7 @@ app.post('/actualizar-permisos', (req, res) => {
     const { usuario_id, permisos } = req.body;
 
     // Eliminar permisos actuales
-    db.query('DELETE FROM usuario_modulos WHERE usuario_id = ?', [usuario_id], (err) => {
+    pool.query('DELETE FROM usuario_modulos WHERE usuario_id = ?', [usuario_id], (err) => {
 
         if(err){
             console.error("Error eliminando permisos:", err);
@@ -211,7 +210,7 @@ app.post('/actualizar-permisos', (req, res) => {
             SELECT ?, id FROM modulos WHERE nombre IN (?)
         `;
 
-        db.query(sql, [usuario_id, permisos], (err2) => {
+        pool.query(sql, [usuario_id, permisos], (err2) => {
 
             if(err2){
                 console.error("Error insertando permisos:", err2);
@@ -228,7 +227,7 @@ app.post('/actualizar-permisos', (req, res) => {
 // MOSTRAR PRODUCTOS
 app.get('/productos', (req, res) => {
 
-    db.query('SELECT * FROM productos', (err, results) => {
+    pool.query('SELECT * FROM productos', (err, results) => {
 
         if (err) {
             console.error("Error en GET:", err);
@@ -251,7 +250,7 @@ app.post('/productos', (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?)
     `;
 
-    db.query(sql, [codigo, descripcion, categoria, precio, costo, fecha], (err) => {
+    pool.query(sql, [codigo, descripcion, categoria, precio, costo, fecha], (err) => {
 
         if (err) {
             console.error("Error en POST:", err);
@@ -268,7 +267,7 @@ app.delete('/productos/:id', (req, res) => {
 
     const { id } = req.params;
 
-    db.query('DELETE FROM productos WHERE id = ?', [id], (err) => {
+    pool.query('DELETE FROM productos WHERE id = ?', [id], (err) => {
 
         if (err) {
             console.error("Error en DELETE:", err);
@@ -299,7 +298,7 @@ app.post('/ventas', (req, res) => {
         LIMIT 1
     `;
 
-    db.query(sqlUltimo, (err, result) => {
+    pool.query(sqlUltimo, (err, result) => {
 
         if (err) return res.status(500).json(err);
 
@@ -322,7 +321,7 @@ app.post('/ventas', (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        db.query(sqlVenta, [
+        pool.query(sqlVenta, [
             nuevoId,
             venta.primerNombre,
             venta.segundoNombre,
@@ -356,7 +355,7 @@ app.post('/ventas', (req, res) => {
             ]);
             console.log("Entrando a detalle de venta");
             console.log("Detalle insertado correctamente");
-            db.query(sqlDetalle, [valores], (err3) => {
+            pool.query(sqlDetalle, [valores], (err3) => {
 
     if (err3) return res.status(500).json(err3);
 
@@ -382,7 +381,7 @@ app.post('/ventas', (req, res) => {
     ORDER BY id DESC LIMIT 1
 `;
 
-    db.query(sqlUltimoEgreso, (err4, result) => {
+    pool.query(sqlUltimoEgreso, (err4, result) => {
 
         if (err4) return res.status(500).json(err4);
 
@@ -401,7 +400,7 @@ app.post('/ventas', (req, res) => {
             VALUES (?, ?, ?, ?)
         `;
 
-        db.query(sqlEgreso, [
+        pool.query(sqlEgreso, [
             nuevoIdEgreso,
             "Compras",
             fechaActual,
@@ -440,7 +439,7 @@ app.get('/ventas', (req, res) => {
         ORDER BY fecha DESC
     `;
 
-    db.query(sql, (err, results) => {
+    pool.query(sql, (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -466,7 +465,7 @@ app.get('/ventas/:id', (req, res) => {
         WHERE v.id = ?
     `;
 
-    db.query(sql, [id], (err, results) => {
+    pool.query(sql, [id], (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -491,7 +490,7 @@ app.get('/ventas-disponibles', (req, res) => {
     GROUP BY v.id
     `;
 
-    db.query(sql, (err, results) => {
+    pool.query(sql, (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -517,7 +516,7 @@ app.post('/ingresos', (req, res) => {
         ORDER BY id DESC LIMIT 1
     `;
 
-    db.query(sqlUltimo, (err, result) => {
+    pool.query(sqlUltimo, (err, result) => {
 
         if (err) return res.status(500).json(err);
 
@@ -536,7 +535,7 @@ app.post('/ingresos', (req, res) => {
             VALUES (?, ?, ?, ?)
         `;
 
-        db.query(sqlInsert, [nuevoId, venta_id, fecha, monto], (err2) => {
+        pool.query(sqlInsert, [nuevoId, venta_id, fecha, monto], (err2) => {
 
             if (err2) return res.status(500).json(err2);
 
@@ -556,7 +555,7 @@ app.get('/ingresos', (req, res) => {
         ORDER BY i.fecha DESC
     `;
 
-    db.query(sql, (err, results) => {
+    pool.query(sql, (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -593,7 +592,7 @@ app.post('/egresos', (req, res) => {
         ORDER BY id DESC LIMIT 1
     `;
 
-    db.query(sqlUltimo, (err, result) => {
+    pool.query(sqlUltimo, (err, result) => {
 
         if (err) return res.status(500).json(err);
 
@@ -612,7 +611,7 @@ app.post('/egresos', (req, res) => {
             VALUES (?, ?, ?, ?)
         `;
 
-        db.query(sqlInsert, [nuevoId, categoria, fecha, monto], (err2) => {
+        pool.query(sqlInsert, [nuevoId, categoria, fecha, monto], (err2) => {
 
             if (err2) return res.status(500).json(err2);
 
@@ -631,7 +630,7 @@ app.get('/egresos', (req, res) => {
         ORDER BY fecha DESC
     `;
 
-    db.query(sql, (err, results) => {
+    pool.query(sql, (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -678,7 +677,7 @@ app.get('/reporte', (req, res) => {
         ORDER BY fecha ASC
     `;
 
-    db.query(sql, [mes, inicio, fin, mes, inicio, fin], (err, results) => {
+    pool.query(sql, [mes, inicio, fin, mes, inicio, fin], (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -713,7 +712,7 @@ app.get('/dashboard', (req, res) => {
         WHERE MONTH(fecha) = ? AND YEAR(fecha) = ?
     `;
 
-    db.query(sql, [mes, anio, mes, anio], (err, results) => {
+    pool.query(sql, [mes, anio, mes, anio], (err, results) => {
 
         if (err) return res.status(500).json(err);
 
