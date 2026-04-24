@@ -60,6 +60,7 @@ $(document).ready(function () {
             producto_id: producto.id,
             producto: producto.descripcion,
             precio: Number(producto.precio),
+            costo: Number(producto.costo),
             cantidad: cantidad,
             subtotal: subtotal
         };

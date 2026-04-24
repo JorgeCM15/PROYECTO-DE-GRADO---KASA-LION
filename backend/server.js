@@ -3,14 +3,15 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const app = express();
 
+
 app.use(cors());
 app.use(express.json());
 
 const db = mysql.createConnection({
-    host: process.env.MYSQLHOST,
-    user: process.env.MYSQLUSER,
-    password: process.env.MYSQLPASSWORD,
-    database: process.env.MYSQL_DATABASE
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'kasa_lion'
 });
 
 db.connect(err => {
@@ -240,15 +241,16 @@ app.get('/productos', (req, res) => {
 
 // CREAR PRODUCTO
 app.post('/productos', (req, res) => {
+    console.log(req.body);
 
-    const { codigo, descripcion, categoria, precio, fecha } = req.body;
+    const { codigo, descripcion, categoria, precio, costo, fecha } = req.body;
 
     const sql = `
-        INSERT INTO productos (codigo, descripcion, categoria, precio, fecha)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO productos (codigo, descripcion, categoria, precio, costo, fecha)
+        VALUES (?, ?, ?, ?, ?, ?)
     `;
 
-    db.query(sql, [codigo, descripcion, categoria, precio, fecha], (err) => {
+    db.query(sql, [codigo, descripcion, categoria, precio, costo, fecha], (err) => {
 
         if (err) {
             console.error("Error en POST:", err);
@@ -339,24 +341,84 @@ app.post('/ventas', (req, res) => {
             // DETALLE
             const sqlDetalle = `
                 INSERT INTO detalle_ventas 
-                (venta_id, producto_id, cantidad, precio, subtotal)
+                (venta_id, producto_id, cantidad, precio, costo, subtotal)
                 VALUES ?
-            `;
+                `;
 
             const valores = detalle.map(item => [
                 nuevoId,
                 item.producto_id,
                 item.cantidad,
                 item.precio,
+                item.costo,
                 item.subtotal
             ]);
-
+            console.log("Entrando a detalle de venta");
+            console.log("Detalle insertado correctamente");
             db.query(sqlDetalle, [valores], (err3) => {
 
-                if (err3) return res.status(500).json(err3);
+    if (err3) return res.status(500).json(err3);
 
-                res.json({ success: true, id: nuevoId });
-            });
+    // 🔥 CALCULAR COSTO TOTAL
+    const costoTotal = detalle.reduce((acc, item) => {
+        return acc + (item.costo * item.cantidad);
+    }, 0);
+    console.log("DETALLE:", detalle);
+    console.log("COSTO TOTAL:", costoTotal);
+
+    // 🔥 GENERAR EGRESO AUTOMÁTICO
+    const fechaActual = venta.fecha;
+
+    const f = new Date(fechaActual);
+    const anio = f.getFullYear();
+    const mes = String(f.getMonth() + 1).padStart(2, '0');
+
+    const prefijo = `${anio}${mes}COS`;
+
+    const sqlUltimoEgreso = `
+    SELECT id FROM egresos 
+    WHERE id LIKE '${prefijo}%'
+    ORDER BY id DESC LIMIT 1
+`;
+
+    db.query(sqlUltimoEgreso, (err4, result) => {
+
+        if (err4) return res.status(500).json(err4);
+
+        let consecutivo = 1;
+
+        if (result.length > 0) {
+            let ultimo = result[0].id;
+            let num = parseInt(ultimo.slice(-2));
+            consecutivo = num + 1;
+        }
+
+        const nuevoIdEgreso = `${prefijo}${String(consecutivo).padStart(2, '0')}`;
+
+        const sqlEgreso = `
+            INSERT INTO egresos (id, categoria, fecha, monto)
+            VALUES (?, ?, ?, ?)
+        `;
+
+        db.query(sqlEgreso, [
+            nuevoIdEgreso,
+            "Compras",
+            fechaActual,
+            costoTotal
+        ], (err5) => {
+
+            if (err5) return res.status(500).json(err5);
+
+            // ✅ RESPUESTA FINAL AQUÍ
+            console.log("✅ EGRESO GENERADO:", nuevoIdEgreso);
+            res.json({ success: true, id: nuevoId });
+
+
+        });
+
+    });
+
+});
 
         });
 
@@ -416,10 +478,16 @@ app.get('/ventas/:id', (req, res) => {
 app.get('/ventas-disponibles', (req, res) => {
 
     const sql = `
-        SELECT v.id, v.total
-        FROM ventas v
-        LEFT JOIN ingresos i ON v.id = i.venta_id
-        WHERE i.venta_id IS NULL
+    SELECT 
+        v.id, 
+        v.total,
+        IFNULL(SUM(d.costo * d.cantidad), 0) AS costo_total,
+        (v.total - IFNULL(SUM(d.costo * d.cantidad), 0)) AS ganancia
+    FROM ventas v
+    LEFT JOIN detalle_ventas d ON v.id = d.venta_id
+    LEFT JOIN ingresos i ON v.id = i.venta_id
+    WHERE i.venta_id IS NULL
+    GROUP BY v.id
     `;
 
     db.query(sql, (err, results) => {
@@ -653,6 +721,8 @@ app.get('/dashboard', (req, res) => {
 
 });
 
-app.listen(3000, () => {
-    console.log("Servidor corriendo en http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("Servidor corriendo en puerto " + PORT);
 });

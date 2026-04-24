@@ -191,6 +191,7 @@
                             <th>Descripción</th>
                             <th>Categoría</th>
                             <th>Precio</th>
+                            <th>Costo</th>
                             <th>Fecha</th>
                             <th>Acción</th>
                         </tr>
@@ -213,7 +214,7 @@
                                 <input type="text" id="codigo" class="form-control" placeholder="Código" required>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input type="text" id="descripcion" class="form-control" placeholder="Descripción" required>
                             </div>
 
@@ -226,10 +227,14 @@
                             </div>
 
                             <div class="col-md-2">
-                                <input type="date" id="fecha" class="form-control" required>
+                                <input type="number" id="costo" class="form-control" placeholder="Costo" required>
                             </div>
 
                             <div class="col-md-1">
+                                <input type="date" id="fecha" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-0.5">
                                 <button type="submit" class="btn btn-primary w-100">+</button>
                             </div>
 

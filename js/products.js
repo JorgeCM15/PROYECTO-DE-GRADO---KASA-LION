@@ -8,8 +8,9 @@ $(document).ready(function () {
         { width: "35%", targets: 1 }, // Descripción (más grande)
         { width: "10%", targets: 2 }, // Categoría
         { width: "15%", targets: 3 }, // Precio
-        { width: "15%", targets: 4 }, // Fecha
-        { width: "5%",  targets: 5 }  // Acción (más pequeño)
+        { width: "15%", targets: 4 }, // Costo
+        { width: "15%",  targets: 5 },  // Fecha
+        { width: "5%",  targets: 6 } // Acción (más pequeño)
     ]
 });
 
@@ -45,6 +46,7 @@ $(document).ready(function () {
                     prod.descripcion,
                     prod.categoria,
                     formatoContable(prod.precio),
+                    formatoContable(prod.costo),
                     new Date(prod.fecha).toLocaleDateString('es-CO'),
                     `<button class="btn btn-danger btn-sm eliminar" data-id="${prod.id}">X</button>`
                 ]);
@@ -67,9 +69,10 @@ $(document).ready(function () {
     var descripcion = $('#descripcion').val().trim().toUpperCase();
     var categoria = $('#categoria').val().trim().toUpperCase();
     var precio = Number($('#precio').val());
+    var costo = Number($('#costo').val());
     var fecha = $('#fecha').val();
 
-    if (!codigo || !descripcion || !categoria || !fecha || isNaN(precio) || precio <= 0) {
+    if (!codigo || !descripcion || !categoria || !fecha || isNaN(precio) || precio <= 0 || isNaN(costo) || costo <= 0) {
         alert("Complete todos los campos correctamente.");
         return;
     }
@@ -83,6 +86,7 @@ $(document).ready(function () {
             descripcion,
             categoria,
             precio,
+            costo,
             fecha
         }),
         success: function(){

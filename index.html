@@ -255,7 +255,13 @@
                                 <!-- Card Header - Dropdown -->
                                 <div
                                     class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Ingresos vs Egresos Diarios</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">Grafico comparativo de ingresos vs egresos diario</h6>
+                                    <select id="filtroMesDiario" class="form-control" style="width: 200px;">
+                                        <option value="" disabled selected>Mes</option>
+                                    </select>
+                                    <select id="filtroAnioDiario" class="form-control" style="width: 200px;">
+                                        <option value="" disabled selected>Año</option>
+                                    </select>
                                     <div class="dropdown no-arrow">
                                         <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
                                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -263,13 +269,92 @@
                                     </div>
                                 </div>
                                 
-                                <div class="card-body" style="height: 500px;">
+                                <div class="card-body" style="height: 380px;">
                                     <div class="chart-area" style="width: 900px;">
                                         <canvas id="graficoBarras"></canvas>
                                     </div>
                                 </div>
                             </div>
-                        </div>         
+                        </div>      
+                        
+                        
+
+    <!-- Comparación Ingresos -->
+    
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success">
+                    Comparativo de los ingresos año actual vs anterior
+                </h6>
+                <select id="filtroAnioIngresos" class="form-control" style="width: 200px;">
+                    <option value="" disabled selected>Año</option>
+                </select>
+            </div>
+            <div class="card-body" style="height: 350px;">
+                <canvas id="graficoIngresosComparativo"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparación Egresos -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-danger">
+                    Comparativo de los egresos año actual vs anterior
+                </h6>
+                <select id="filtroAnioEgresos" class="form-control" style="width: 200px;">
+                    <option value="" disabled selected>Año</option>
+                </select>
+            </div>
+            <div class="card-body" style="height: 350px;">
+                <canvas id="graficoEgresosComparativo"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row">
+
+    <!-- Pie Chart -->
+    <div class="col-xl-6 col-lg-6">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-warning">Distribución por categoría de los egresos mensuales </h6>
+            <div class="d-flex">
+            <select id="filtroAnioPie" class="form-control" style="width: 150px;">
+                <option value="" disabled selected>Año</option>
+            </select>
+            <select id="filtroMesPie" class="form-control" style="width: 150px;">
+                <option value="" disabled selected>Mes</option>
+            </select>
+            </div>
+        </div>
+        <div class="card-body" style="height: 350px;">
+            <canvas id="graficoTortaEgresos"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="col-xl-6 col-lg-6">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                Distribución por categoría de egresos anuales
+            </h6>
+            <select id="filtroAnioPie-2" class="form-control" style="width: 100px;">
+                <option value="" disabled selected>Año</option>
+            </select>
+        </div>
+        <div class="card-body" style="height: 350px;">
+            <canvas id="graficoTortaEgresosAnual"></canvas>
+        </div>
+    </div>
+</div>
+
+</div>
                             
         <!-- End of Content Wrapper -->
 
@@ -314,9 +399,15 @@
     <!-- Page level plugins -->
     <script src="vendor/chart.js/Chart.min.js"></script>
 
+    <script>
+        Chart.plugins.register(ChartDataLabels);
+    </script>
+
     <!-- Page level custom scripts -->
+     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <script src="js/demo/chart-area-demo.js"></script>
     <script src="js/demo/chart-pie-demo.js"></script>
+    
 
     <script src="js/index.js"></script>
     <script src="js/auth.js"></script>

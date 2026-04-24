@@ -27,7 +27,7 @@ $(document).ready(function () {
                 ventas.forEach(function (v) {
 
                     select.append(`
-                        <option value="${v.id}" data-monto="${v.total}">
+                        <option value="${v.id}" data-monto="${v.ganancia}">
                             ${v.id} - ${formatoMoneda(v.total)}
                         </option>
                     `);
