@@ -21,6 +21,8 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+console.log("🚀 Iniciando servidor...");
+
 pool.getConnection((err, connection) => {
   if (err) {
     console.error("❌ Error conexión DB:", err);
