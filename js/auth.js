@@ -10,10 +10,10 @@ if(!usuario){
 }
 
 
-usuario.permisos = usuario.modulos || [];
+usuario.permisos = (usuario && usuario.modulos) ? usuario.modulos : [];
 
 
-if(usuario.correo === "administrador@kasalion.com"){
+if(usuario.correo === "admin.contable.kasalion@gmail.com"){
     usuario.permisos = [
         "admin",
         "panel","ingresos","egresos",

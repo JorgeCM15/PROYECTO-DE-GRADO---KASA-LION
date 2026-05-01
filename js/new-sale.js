@@ -1,3 +1,7 @@
+const API = window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://TU-APP.up.railway.app";
+
 $(document).ready(function () {
 
     var productos = [];
@@ -12,14 +16,13 @@ $(document).ready(function () {
         }).format(numero);
     }
 
-    // MAYÚSCULAS automáticas
     $('.nombre-mayus').on('input', function () {
         this.value = this.value.toUpperCase();
     });
 
-    // 🔥 CARGAR PRODUCTOS DESDE BACKEND
+    // 🔥 CARGAR PRODUCTOS
     $.ajax({
-        url: "http://localhost:3000/productos",
+        url: `${API}/productos`, 
         type: "GET",
         success: function (data) {
 
@@ -41,7 +44,6 @@ $(document).ready(function () {
         }
     });
 
-    // Agregar producto
     $('#agregarProducto').click(function () {
 
         var idSeleccionado = $('#productoSelect').val();
@@ -98,14 +100,12 @@ $(document).ready(function () {
         $('#totalVenta').text(formatoMoneda(total));
     }
 
-    // Eliminar producto
     $(document).on('click', '.eliminar', function () {
         var index = $(this).data('index');
         detalleVenta.splice(index, 1);
         actualizarTabla();
     });
 
-    // GENERAR ID
     function generarIdVenta() {
         var fecha = new Date();
         var anio = fecha.getFullYear();
@@ -114,7 +114,7 @@ $(document).ready(function () {
         return `${anio}${mes}VENTA${random}`;
     }
 
-    // 🔥 GUARDAR VENTA EN BACKEND
+    // 🔥 GUARDAR VENTA
     $('#guardarVenta').click(function () {
 
         var primerNombre = $('#primerNombre').val().trim();
@@ -146,7 +146,6 @@ $(document).ready(function () {
         }
 
         var venta = {
-            
             primerNombre: primerNombre.toUpperCase(),
             segundoNombre: $('#segundoNombre').val().toUpperCase(),
             primerApellido: primerApellido.toUpperCase(),
@@ -161,7 +160,7 @@ $(document).ready(function () {
         };
 
         $.ajax({
-            url: "http://localhost:3000/ventas",
+            url: `${API}/ventas`,
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify({

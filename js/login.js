@@ -1,3 +1,7 @@
+const API = window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://TU-APP.up.railway.app";
+
 $(document).ready(function(){
 
     $('#btnLogin').on('click', function(e){
@@ -13,7 +17,7 @@ $(document).ready(function(){
         }
 
         $.ajax({
-            url: "http://localhost:3000/login",
+            url: `${API}/login`,
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify({

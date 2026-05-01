@@ -1,3 +1,7 @@
+const API = window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://TU-APP.up.railway.app";
+
 $(document).ready(function(){
 
 // FORMATO MONEDA
@@ -34,7 +38,7 @@ $('#guardarEgreso').on('click', function(){
     }
 
     $.ajax({
-        url: "http://localhost:3000/egresos",
+        url: `${API}/egresos`, 
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify({
@@ -65,7 +69,7 @@ $('#guardarEgreso').on('click', function(){
 function cargarHistorialEgresos(){
 
     $.ajax({
-        url: "http://localhost:3000/egresos",
+        url: `${API}/egresos`,
         type: "GET",
         success: function(egresos){
 

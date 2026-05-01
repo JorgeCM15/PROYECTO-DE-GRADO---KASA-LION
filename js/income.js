@@ -1,3 +1,7 @@
+const API = window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://TU-APP.up.railway.app";
+
 $(document).ready(function () {
 
     function formatoMoneda(numero) {
@@ -16,7 +20,7 @@ $(document).ready(function () {
     function cargarVentas() {
 
         $.ajax({
-            url: "http://localhost:3000/ventas-disponibles",
+            url: `${API}/ventas-disponibles`, // 🔥 CAMBIO
             type: "GET",
             success: function (ventas) {
 
@@ -67,7 +71,7 @@ $(document).ready(function () {
         }
 
         $.ajax({
-            url: "http://localhost:3000/ingresos",
+            url: `${API}/ingresos`,
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify({
@@ -98,7 +102,7 @@ $(document).ready(function () {
     function cargarHistorial() {
 
         $.ajax({
-            url: "http://localhost:3000/ingresos",
+            url: `${API}/ingresos`, 
             type: "GET",
             success: function (ingresos) {
 

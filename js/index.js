@@ -1,5 +1,9 @@
-$(document).ready(function(){
+const API = window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://TU-APP.up.railway.app";
 
+$(document).ready(function(){
+    
 function formatoMoneda(valor){
     return new Intl.NumberFormat('es-CO',{
         style:'currency',
@@ -8,18 +12,18 @@ function formatoMoneda(valor){
     }).format(valor);
 }
 
-// 🔥 VARIABLES GLOBALES
+// VARIABLES GLOBALES
 let datosGlobales = [];
 let egresosGlobales = [];
 
 let chartLinea, chartIngresos, chartEgresos, chartPieMensual, chartPieAnual;
 
-// 📅 FECHA ACTUAL
+// FECHA ACTUAL
 let hoy = new Date();
 let mesActual = hoy.getMonth();
 let anioActual = hoy.getFullYear();
 
-// 🔥 LLENAR FILTROS
+// LLENAR FILTROS
 function llenarFiltros(data){
 
     let aniosSet = new Set();
@@ -44,13 +48,13 @@ function llenarFiltros(data){
         "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
     ];
 
-    // 🔹 LLENAR AÑOS
+    // LLENAR AÑOS
     aniosSet.forEach(a=>{
         $('#filtroAnioDiario, #filtroAnioIngresos, #filtroAnioEgresos, #filtroAnioPie, #filtroAnioPie-2')
         .append(`<option value="${a}">${a}</option>`);
     });
 
-    // 🔹 CAMBIO DE AÑO → CARGAR MESES
+    // CAMBIO DE AÑO → CARGAR MESES
     $('#filtroAnioDiario, #filtroAnioPie').on('change', function(){
 
         let anioSeleccionado = $(this).val();
@@ -69,7 +73,7 @@ function llenarFiltros(data){
         }
     });
 
-    // 🔥 SELECCIÓN AUTOMÁTICA
+    // SELECCIÓN AUTOMÁTICA
 
     // Año diario
     if($('#filtroAnioDiario option[value="'+anioActual+'"]').length){
@@ -113,7 +117,7 @@ function llenarFiltros(data){
     $('#filtroAnioPie-2').prop('selectedIndex',1);
 }
 
-// 🔁 RENDER GENERAL
+// RENDER GENERAL
 function renderTodo(){
     renderCards();
     renderLinea();
@@ -122,7 +126,7 @@ function renderTodo(){
     renderPieAnual();
 }
 
-// 💰 CARDS
+// CARDS
 function renderCards(){
 
     let mes = $('#filtroMesDiario').val();
@@ -151,7 +155,7 @@ function renderCards(){
     $('#balance').text(formatoMoneda(ingresos - egresos));
 }
 
-// 📊 LINEA
+// LINEA
 function renderLinea(){
 
     let mes = $('#filtroMesDiario').val();
@@ -220,7 +224,7 @@ function renderLinea(){
     });
 }
 
-// 📊 COMPARATIVOS
+// COMPARATIVOS
 function renderComparativos(){
 
     let anioIng = $('#filtroAnioIngresos').val();
@@ -251,8 +255,9 @@ function renderComparativos(){
     chartIngresos=new Chart(document.getElementById('graficoIngresosComparativo'),{
         type:'bar',
         data:{
+            label: 'Ingresos',
             labels:['Año Anterior','Año Actual'],
-            datasets:[{data:[ingAnt,ingA],backgroundColor:['gray','green']}]
+            datasets:[{label: 'Ingresos',data:[ingAnt,ingA],backgroundColor:['green','green']}]
         }
     });
 
@@ -260,12 +265,12 @@ function renderComparativos(){
         type:'bar',
         data:{
             labels:['Año Anterior','Año Actual'],
-            datasets:[{data:[egAnt,egA],backgroundColor:['gray','red']}]
+            datasets:[{label: 'Egresos',data:[egAnt,egA],backgroundColor:['red','red']}]
         }
     });
 }
 
-// 🥧 PIE MENSUAL
+// PIE MENSUAL
 function renderPieMensual(){
 
     let mes=$('#filtroMesPie').val();
@@ -310,7 +315,7 @@ function renderPieMensual(){
     });
 }
 
-// 🥧 PIE ANUAL
+// PIE ANUAL
 function renderPieAnual(){
 
     let anio=$('#filtroAnioPie-2').val();
@@ -353,17 +358,17 @@ function renderPieAnual(){
     });
 }
 
-// 🔁 EVENTOS
+// EVENTOS
 $('select').on('change', renderTodo);
 
-// 🔥 DATOS
-$.get("http://localhost:3000/dashboard",data=>{
+// DATOS
+$.get(`${API}/dashboard`, data=>{
     datosGlobales=data;
     llenarFiltros(data);
     renderTodo();
 });
 
-$.get("http://localhost:3000/egresos",data=>{
+$.get(`${API}/egresos`, data=>{
     egresosGlobales=data;
     renderTodo();
 });

@@ -1,3 +1,7 @@
+const API = window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://TU-APP.up.railway.app";
+
 $(document).ready(function () {
 
     function formatoMoneda(numero) {
@@ -8,9 +12,18 @@ $(document).ready(function () {
         }).format(numero);
     }
 
-    // 🔥 CARGAR HISTORIAL DESDE BACKEND
+    function formatearFecha(fecha) {
+        const f = new Date(fecha);
+        const anio = f.getFullYear();
+        const mes = String(f.getMonth() + 1).padStart(2, '0');
+        const dia = String(f.getDate()).padStart(2, '0');
+
+        return `${anio}-${mes}-${dia}`;
+    }
+
+    // CARGAR HISTORIAL DESDE BACKEND
     $.ajax({
-        url: "http://localhost:3000/ventas",
+        url: `${API}/ventas`,
         type: "GET",
         success: function (ventas) {
 
@@ -20,7 +33,7 @@ $(document).ready(function () {
                     <tr>
                         <td>${venta.id}</td>
                         <td>${venta.cliente}</td>
-                        <td>${venta.fecha}</td>
+                        <td>${formatearFecha(venta.fecha)}</td>
                         <td class="text-end">${formatoMoneda(venta.total)}</td>
                         <td>
                             <button class="btn btn-primary btn-sm verDetalle" data-id="${venta.id}">
@@ -50,7 +63,7 @@ $(document).ready(function () {
         var id = $(this).data('id');
 
         $.ajax({
-            url: `http://localhost:3000/ventas/${id}`,
+            url: `${API}/ventas/${id}`,
             type: "GET",
             success: function (data) {
 

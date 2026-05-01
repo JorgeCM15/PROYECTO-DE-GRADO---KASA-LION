@@ -1,3 +1,7 @@
+const API = window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://TU-APP.up.railway.app";
+
 $(document).ready(function(){
 
     $('#guardarUsuario').on('click', function(){
@@ -22,9 +26,8 @@ $(document).ready(function(){
             return;
         }
 
-        // 🚀 AQUÍ VA AJAX
         $.ajax({
-            url: "http://localhost:3000/usuarios",
+            url: `${API}/usuarios`, 
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify({

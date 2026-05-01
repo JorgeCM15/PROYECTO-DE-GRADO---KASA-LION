@@ -1,3 +1,7 @@
+const API = window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://TU-APP.up.railway.app";
+
 $(document).ready(function(){
 
     $('#generarExcel').on('click', function(){
@@ -14,13 +18,12 @@ $(document).ready(function(){
         var fin = (tipo === "quincenal") ? 15 : 31;
 
         $.ajax({
-            url: `http://localhost:3000/reporte?mes=${mesSeleccionado}&inicio=${inicio}&fin=${fin}`,
+            url: `${API}/reporte?mes=${mesSeleccionado}&inicio=${inicio}&fin=${fin}`,
             type: "GET",
             success: function(data){
 
                 let ws_data = [];
 
-                // ENCABEZADOS
                 let headers = [
                     "TIPO","ID","FECHA","PRIMER NOMBRE","SEGUNDO NOMBRE",
                     "PRIMER APELLIDO","SEGUNDO APELLIDO","DOCUMENTO",
@@ -64,7 +67,6 @@ $(document).ready(function(){
 
                 let ws = XLSX.utils.aoa_to_sheet(ws_data);
 
-                // 🔥 ESTILO ENCABEZADO (FILA 1)
                 headers.forEach((_, colIndex) => {
                     let cell = XLSX.utils.encode_cell({ r: 0, c: colIndex });
                     if(ws[cell]){
@@ -82,7 +84,6 @@ $(document).ready(function(){
                     }
                 });
 
-                // 🔥 ESTILO GENERAL (bordes)
                 let range = XLSX.utils.decode_range(ws['!ref']);
                 for(let R = 1; R <= range.e.r; ++R){
                     for(let C = 0; C <= range.e.c; ++C){
@@ -102,7 +103,6 @@ $(document).ready(function(){
                     }
                 }
 
-                // 🔥 AUTO WIDTH
                 ws['!cols'] = headers.map((h, i) => ({
                     wch: Math.max(
                         h.length,

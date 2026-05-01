@@ -1,13 +1,17 @@
+const API = window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://TU-APP.up.railway.app";
+
 $(document).ready(function(){
 
 function cargarUsuarios(){
 
     $.ajax({
-        url: "http://localhost:3000/usuarios",
+        url: `${API}/usuarios`, 
         type: "GET",
         success: function(usuarios){
 
-            console.log("Usuarios:", usuarios); // 🔥 DEBUG
+            console.log("Usuarios:", usuarios);
 
             var tabla = $('#tablaUsuarios tbody');
             tabla.empty();
@@ -65,7 +69,6 @@ function cargarUsuarios(){
 cargarUsuarios();
 
 
-// 🔥 GUARDAR PERMISOS EN BD
 $(document).on('click', '.guardar', function(){
 
     var id = $(this).data('id');
@@ -77,7 +80,7 @@ $(document).on('click', '.guardar', function(){
     });
 
     $.ajax({
-        url: "http://localhost:3000/actualizar-permisos",
+        url: `${API}/actualizar-permisos`,
         type: "POST",
         contentType: "application/json",
         data: JSON.stringify({
@@ -87,7 +90,6 @@ $(document).on('click', '.guardar', function(){
         success: function(){
             alert("Permisos actualizados");
             cargarUsuarios(); 
-
         },
         error: function(err){
             console.error(err);
@@ -97,7 +99,7 @@ $(document).on('click', '.guardar', function(){
 });
 
 
-// 🔥 ELIMINAR
+// ELIMINAR
 $(document).on('click', '.eliminar', function(){
 
     var id = $(this).data('id');
@@ -105,7 +107,7 @@ $(document).on('click', '.eliminar', function(){
     if(!confirm("¿Eliminar usuario?")) return;
 
     $.ajax({
-        url: `http://localhost:3000/usuarios/${id}`,
+        url: `${API}/usuarios/${id}`, 
         type: "DELETE",
         success: function(){
             alert("Usuario eliminado");

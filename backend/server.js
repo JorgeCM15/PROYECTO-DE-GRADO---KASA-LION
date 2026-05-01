@@ -2,35 +2,27 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const app = express();
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 
 app.use(cors());
 app.use(express.json());
 
-const pool = mysql.createPool({
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT,
-  ssl: process.env.NODE_ENV === 'production'
-    ? { rejectUnauthorized: false }
-    : false,
-
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+const db = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT
 });
 
-console.log("🚀 Iniciando servidor...");
-
-pool.getConnection((err, connection) => {
-  if (err) {
-    console.error("❌ Error conexión DB:", err);
-  } else {
-    console.log("✅ Conectado a MySQL");
-    connection.release();
-  }
+db.connect(err => {
+    if (err) {
+        console.error("Error conexión:", err);
+        return;
+    }
+    console.log("Conectado a MySQL");
 });
 
 // REGISTRAR USUARIOS
@@ -53,7 +45,7 @@ app.post('/usuarios', (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    pool.query(sqlUsuario, [
+    db.query(sqlUsuario, [
         nombres,
         primerApellido,
         segundoApellido,
@@ -80,7 +72,7 @@ app.post('/usuarios', (req, res) => {
                 VALUES ?
             `;
 
-            pool.query(sqlPermisos, [valores], (err2) => {
+            db.query(sqlPermisos, [valores], (err2) => {
                 if (err2) {
                     console.error(err2);
                     return res.status(500).json({ error: err2 });
@@ -106,7 +98,7 @@ app.post('/login', (req, res) => {
 
     const sql = "SELECT * FROM usuarios WHERE correo = ?";
 
-    pool.query(sql, [correo], (err, results) => {
+    db.query(sql, [correo], (err, results) => {
 
         if (err) {
             console.error(err);
@@ -132,7 +124,7 @@ app.post('/login', (req, res) => {
             WHERE um.usuario_id = ?
         `;
 
-        pool.query(sqlModulos, [usuario.id], (err2, modulos) => {
+        db.query(sqlModulos, [usuario.id], (err2, modulos) => {
 
             if (err2) {
                 console.error(err2);
@@ -167,7 +159,7 @@ app.get('/usuarios', (req, res) => {
         GROUP BY u.id
     `;
 
-    pool.query(sql, (err, results) => {
+    db.query(sql, (err, results) => {
 
         if (err) {
             console.error(err);
@@ -179,14 +171,129 @@ app.get('/usuarios', (req, res) => {
 
 });
 
+const crypto = require('crypto');
+
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
+});
+
+let tokens = {};
+
+app.post('/recuperar-password', (req, res) => {
+
+    const { correo } = req.body;
+
+    const sql = "SELECT * FROM usuarios WHERE TRIM(LOWER(correo)) = TRIM(LOWER(?))";
+
+    db.query(sql, [correo], (err, results) => {
+
+        if (err) return res.status(500).json(err);
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: "Usuario no encontrado" });
+        }
+
+        // 🔐 Generar token
+        const token = crypto.randomBytes(20).toString('hex');
+
+        tokens[token] = {
+            correo,
+            expira: Date.now() + (15 * 60 * 1000)
+        };
+
+        const link = `http://localhost:5500/reset-password.html?token=${token}`;
+
+        // ✉️ CONFIGURAR CORREO
+        const mailOptions = {
+            from: 'admin.contable.kasalion@gmail.com',
+            to: correo,
+            subject: 'RECUPERACIÓN DE CONTRASEÑA - KASA LION',
+            html: `
+                <h2>Recuperar contraseña</h2>
+                <p>Haz clic en el siguiente enlace para cambiar tu contraseña:</p>
+                <a href="${link}">${link}</a>
+                <p>Este enlace expira en 15 minutos.</p>
+            `
+        };
+console.log("ENVIANDO CORREO A:", correo);
+console.log("TOKEN GENERADO:", token);
+        // 📤 ENVIAR CORREO
+        transporter.sendMail(mailOptions, (error, info) => {
+
+    if (error) {
+        console.error("❌ ERROR REAL DE GMAIL:", error);
+
+        return res.status(500).json({ 
+            error: error.message 
+        });
+    }
+
+    console.log("Correo enviado:", info.response);
+
+    res.json({ success: true });
+});
+
+    });
+
+});
+
+app.post('/cambiar-password', (req, res) => {
+
+    const { token, password } = req.body;
+
+    // 🔍 Verificar token
+    if (!tokens[token]) {
+        return res.status(400).json({ error: "Token inválido" });
+    }
+
+    const data = tokens[token];
+
+    // ⏳ Verificar expiración
+    if (Date.now() > data.expira) {
+        delete tokens[token];
+        return res.status(400).json({ error: "Token expirado" });
+    }
+
+    const correo = data.correo;
+
+    // Actualizar contraseña
+    const sql = `
+        UPDATE usuarios 
+        SET password = ?
+        WHERE TRIM(LOWER(correo)) = TRIM(LOWER(?))
+    `;
+
+    db.query(sql, [password, correo], (err, result) => {
+
+        if (err) {
+            console.error("Error actualizando contraseña:", err);
+            return res.status(500).json(err);
+        }
+
+        // Eliminar token usado
+        delete tokens[token];
+
+        res.json({ success: true });
+    });
+
+});
+
 // ELIMINAR USUARIOS
 app.delete('/usuarios/:id', (req, res) => {
 
     const id = req.params.id;
 
-    pool.query('DELETE FROM usuario_modulos WHERE usuario_id = ?', [id], () => {
+    db.query('DELETE FROM usuario_modulos WHERE usuario_id = ?', [id], () => {
 
-        pool.query('DELETE FROM usuarios WHERE id = ?', [id], (err) => {
+        db.query('DELETE FROM usuarios WHERE id = ?', [id], (err) => {
 
             if (err) return res.status(500).json(err);
 
@@ -203,7 +310,7 @@ app.post('/actualizar-permisos', (req, res) => {
     const { usuario_id, permisos } = req.body;
 
     // Eliminar permisos actuales
-    pool.query('DELETE FROM usuario_modulos WHERE usuario_id = ?', [usuario_id], (err) => {
+    db.query('DELETE FROM usuario_modulos WHERE usuario_id = ?', [usuario_id], (err) => {
 
         if(err){
             console.error("Error eliminando permisos:", err);
@@ -221,7 +328,7 @@ app.post('/actualizar-permisos', (req, res) => {
             SELECT ?, id FROM modulos WHERE nombre IN (?)
         `;
 
-        pool.query(sql, [usuario_id, permisos], (err2) => {
+        db.query(sql, [usuario_id, permisos], (err2) => {
 
             if(err2){
                 console.error("Error insertando permisos:", err2);
@@ -238,7 +345,7 @@ app.post('/actualizar-permisos', (req, res) => {
 // MOSTRAR PRODUCTOS
 app.get('/productos', (req, res) => {
 
-    pool.query('SELECT * FROM productos', (err, results) => {
+    db.query('SELECT * FROM productos', (err, results) => {
 
         if (err) {
             console.error("Error en GET:", err);
@@ -261,7 +368,7 @@ app.post('/productos', (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?)
     `;
 
-    pool.query(sql, [codigo, descripcion, categoria, precio, costo, fecha], (err) => {
+    db.query(sql, [codigo, descripcion, categoria, precio, costo, fecha], (err) => {
 
         if (err) {
             console.error("Error en POST:", err);
@@ -278,7 +385,7 @@ app.delete('/productos/:id', (req, res) => {
 
     const { id } = req.params;
 
-    pool.query('DELETE FROM productos WHERE id = ?', [id], (err) => {
+    db.query('DELETE FROM productos WHERE id = ?', [id], (err) => {
 
         if (err) {
             console.error("Error en DELETE:", err);
@@ -309,7 +416,7 @@ app.post('/ventas', (req, res) => {
         LIMIT 1
     `;
 
-    pool.query(sqlUltimo, (err, result) => {
+    db.query(sqlUltimo, (err, result) => {
 
         if (err) return res.status(500).json(err);
 
@@ -332,7 +439,7 @@ app.post('/ventas', (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        pool.query(sqlVenta, [
+        db.query(sqlVenta, [
             nuevoId,
             venta.primerNombre,
             venta.segundoNombre,
@@ -366,7 +473,7 @@ app.post('/ventas', (req, res) => {
             ]);
             console.log("Entrando a detalle de venta");
             console.log("Detalle insertado correctamente");
-            pool.query(sqlDetalle, [valores], (err3) => {
+            db.query(sqlDetalle, [valores], (err3) => {
 
     if (err3) return res.status(500).json(err3);
 
@@ -392,7 +499,7 @@ app.post('/ventas', (req, res) => {
     ORDER BY id DESC LIMIT 1
 `;
 
-    pool.query(sqlUltimoEgreso, (err4, result) => {
+    db.query(sqlUltimoEgreso, (err4, result) => {
 
         if (err4) return res.status(500).json(err4);
 
@@ -411,7 +518,7 @@ app.post('/ventas', (req, res) => {
             VALUES (?, ?, ?, ?)
         `;
 
-        pool.query(sqlEgreso, [
+        db.query(sqlEgreso, [
             nuevoIdEgreso,
             "Compras",
             fechaActual,
@@ -450,7 +557,7 @@ app.get('/ventas', (req, res) => {
         ORDER BY fecha DESC
     `;
 
-    pool.query(sql, (err, results) => {
+    db.query(sql, (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -476,7 +583,7 @@ app.get('/ventas/:id', (req, res) => {
         WHERE v.id = ?
     `;
 
-    pool.query(sql, [id], (err, results) => {
+    db.query(sql, [id], (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -501,7 +608,7 @@ app.get('/ventas-disponibles', (req, res) => {
     GROUP BY v.id
     `;
 
-    pool.query(sql, (err, results) => {
+    db.query(sql, (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -527,7 +634,7 @@ app.post('/ingresos', (req, res) => {
         ORDER BY id DESC LIMIT 1
     `;
 
-    pool.query(sqlUltimo, (err, result) => {
+    db.query(sqlUltimo, (err, result) => {
 
         if (err) return res.status(500).json(err);
 
@@ -546,7 +653,7 @@ app.post('/ingresos', (req, res) => {
             VALUES (?, ?, ?, ?)
         `;
 
-        pool.query(sqlInsert, [nuevoId, venta_id, fecha, monto], (err2) => {
+        db.query(sqlInsert, [nuevoId, venta_id, fecha, monto], (err2) => {
 
             if (err2) return res.status(500).json(err2);
 
@@ -566,7 +673,7 @@ app.get('/ingresos', (req, res) => {
         ORDER BY i.fecha DESC
     `;
 
-    pool.query(sql, (err, results) => {
+    db.query(sql, (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -603,7 +710,7 @@ app.post('/egresos', (req, res) => {
         ORDER BY id DESC LIMIT 1
     `;
 
-    pool.query(sqlUltimo, (err, result) => {
+    db.query(sqlUltimo, (err, result) => {
 
         if (err) return res.status(500).json(err);
 
@@ -622,7 +729,7 @@ app.post('/egresos', (req, res) => {
             VALUES (?, ?, ?, ?)
         `;
 
-        pool.query(sqlInsert, [nuevoId, categoria, fecha, monto], (err2) => {
+        db.query(sqlInsert, [nuevoId, categoria, fecha, monto], (err2) => {
 
             if (err2) return res.status(500).json(err2);
 
@@ -641,7 +748,7 @@ app.get('/egresos', (req, res) => {
         ORDER BY fecha DESC
     `;
 
-    pool.query(sql, (err, results) => {
+    db.query(sql, (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -688,7 +795,7 @@ app.get('/reporte', (req, res) => {
         ORDER BY fecha ASC
     `;
 
-    pool.query(sql, [mes, inicio, fin, mes, inicio, fin], (err, results) => {
+    db.query(sql, [mes, inicio, fin, mes, inicio, fin], (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -723,7 +830,7 @@ app.get('/dashboard', (req, res) => {
         WHERE MONTH(fecha) = ? AND YEAR(fecha) = ?
     `;
 
-    pool.query(sql, [mes, anio, mes, anio], (err, results) => {
+    db.query(sql, [mes, anio, mes, anio], (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -733,10 +840,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.get('/', (req, res) => {
-  res.send('API funcionando 🚀');
-});
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log("Servidor corriendo en puerto " + PORT);
 });
