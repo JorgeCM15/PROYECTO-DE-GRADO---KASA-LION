@@ -6,12 +6,17 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 
+
 const path = require('path');
 
-app.use(express.static(path.join(__dirname, 'public')));
+const publicPath = path.resolve(__dirname, 'public');
 
+// MIDDLEWARES
 app.use(cors());
 app.use(express.json());
+
+// SERVIR FRONTEND
+app.use(express.static(publicPath));
 
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
