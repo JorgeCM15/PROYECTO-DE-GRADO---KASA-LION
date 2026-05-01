@@ -210,7 +210,7 @@ app.post('/recuperar-password', (req, res) => {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        // 🔐 Generar token
+        // Generar token
         const token = crypto.randomBytes(20).toString('hex');
 
         tokens[token] = {
@@ -218,9 +218,9 @@ app.post('/recuperar-password', (req, res) => {
             expira: Date.now() + (15 * 60 * 1000)
         };
 
-        const link = `http://localhost:5500/reset-password.html?token=${token}`;
+        const link = `https://proyecto-de-grado-kasa-lion-production.up.railway.app/reset-password.html?token=${token}`;
 
-        // ✉️ CONFIGURAR CORREO
+        // CONFIGURAR CORREO
         const mailOptions = {
             from: 'admin.contable.kasalion@gmail.com',
             to: correo,
@@ -258,14 +258,14 @@ app.post('/cambiar-password', (req, res) => {
 
     const { token, password } = req.body;
 
-    // 🔍 Verificar token
+    // Verificar token
     if (!tokens[token]) {
         return res.status(400).json({ error: "Token inválido" });
     }
 
     const data = tokens[token];
 
-    // ⏳ Verificar expiración
+    // Verificar expiración
     if (Date.now() > data.expira) {
         delete tokens[token];
         return res.status(400).json({ error: "Token expirado" });
@@ -417,7 +417,7 @@ app.post('/ventas', (req, res) => {
 
     const prefijo = `${anio}${mes}VENTA`;
 
-    // 🔥 BUSCAR ÚLTIMO ID
+    // BUSCAR ÚLTIMO ID
     const sqlUltimo = `
         SELECT id FROM ventas 
         WHERE id LIKE '${prefijo}%'
@@ -486,14 +486,14 @@ app.post('/ventas', (req, res) => {
 
     if (err3) return res.status(500).json(err3);
 
-    // 🔥 CALCULAR COSTO TOTAL
+    // CALCULAR COSTO TOTAL
     const costoTotal = detalle.reduce((acc, item) => {
         return acc + (item.costo * item.cantidad);
     }, 0);
     console.log("DETALLE:", detalle);
     console.log("COSTO TOTAL:", costoTotal);
 
-    // 🔥 GENERAR EGRESO AUTOMÁTICO
+    // GENERAR EGRESO AUTOMÁTICO
     const fechaActual = venta.fecha;
 
     const f = new Date(fechaActual);

@@ -1,6 +1,4 @@
-const API = window.location.hostname === "localhost"
-    ? "http://localhost:3000"
-    : "https://proyecto-de-grado-kasa-lion-production.up.railway.app/";
+const API = window.location.origin;
 
 $(document).ready(function(){
 
@@ -26,15 +24,21 @@ $(document).ready(function(){
             }),
             success: function(respuesta){
 
-                // Guardar sesión
-                localStorage.setItem("usuarioActivo", JSON.stringify(respuesta.usuario));
+                console.log("RESPUESTA LOGIN:", respuesta);
 
-                // Redirigir
-                window.location.href = "index.html";
+                if (respuesta.success) {
+
+                    localStorage.setItem("usuarioActivo", JSON.stringify(respuesta.usuario));
+
+                    window.location.href = "index.html";
+
+                } else {
+                    alert(respuesta.error || "Error al iniciar sesión");
+                }
             },
             error: function(err){
-                alert("Correo o contraseña incorrectos");
-                console.error(err.responseText);
+                console.error("ERROR LOGIN:", err);
+                alert("Error de conexión con el servidor");
             }
         });
 
