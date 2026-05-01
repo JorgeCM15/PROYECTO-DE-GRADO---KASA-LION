@@ -6,6 +6,10 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 
+const path = require('path');
+
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(cors());
 app.use(express.json());
 
@@ -840,6 +844,14 @@ app.get('/dashboard', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+    res.send('API KASA LION funcionando 🚀');
+});
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 app.listen(PORT, () => {
   console.log("Servidor corriendo en puerto " + PORT);
