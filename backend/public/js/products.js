@@ -2,7 +2,12 @@ const API = window.location.hostname === "localhost"
     ? "http://localhost:3000"
     : "https://sgestionfinanciera-kasalion.up.railway.app";
 
-$(document).ready(function () {
+function getAuthHeaders() {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: "Bearer " + token } : {};
+}
+
+    $(document).ready(function () {
 
     var table = $('#dataTable').DataTable({
         autoWidth: false,
@@ -34,6 +39,7 @@ $(document).ready(function () {
         $.ajax({
             url: `${API}/productos`,
             type: "GET",
+            headers: getAuthHeaders(),
             success: function(productos){
 
                 table.clear();
@@ -79,6 +85,7 @@ $(document).ready(function () {
         $.ajax({
             url: `${API}/productos`,
             type: "POST",
+            headers: getAuthHeaders(),
             contentType: "application/json",
             data: JSON.stringify({
                 codigo,
@@ -111,6 +118,7 @@ $(document).ready(function () {
         $.ajax({
             url: `${API}/productos/${id}`,
             type: "DELETE",
+            headers: getAuthHeaders(),
             success: function(){
                 cargarProductos();
             }

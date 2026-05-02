@@ -36,6 +36,16 @@ function validarToken() {
     return true;
 }
 
+// ENVIAR TOKEN EN AJAX
+    $.ajaxSetup({
+        beforeSend: function (xhr) {
+            const token = localStorage.getItem("token");
+            if (token) {
+                xhr.setRequestHeader("Authorization", "Bearer " + token);
+            }
+        }
+    });
+
 // DOCUMENT READY
 $(document).ready(function () {
 
@@ -83,15 +93,7 @@ $(document).ready(function () {
         ];
     }
 
-    // ENVIAR TOKEN EN AJAX
-    $.ajaxSetup({
-        beforeSend: function (xhr) {
-            const token = localStorage.getItem("token");
-            if (token) {
-                xhr.setRequestHeader("Authorization", "Bearer " + token);
-            }
-        }
-    });
+    
 
     // MOSTRAR NOMBRE
     if (usuario.nombres) {
