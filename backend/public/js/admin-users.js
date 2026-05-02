@@ -1,6 +1,6 @@
 const API = window.location.hostname === "localhost"
     ? "http://localhost:3000"
-    : "https://proyecto-de-grado-kasa-lion-production.up.railway.app/";
+    : "https://sgestionfinanciera-kasalion.up.railway.app";
 
 $(document).ready(function(){
 
