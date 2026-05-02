@@ -7,8 +7,7 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const publicPath = path.resolve(__dirname, 'public');
-const bcrypt = require('bcrypt');
-const valido = await bcrypt.compare(password, usuario.password);
+
 // MIDDLEWARES
 app.use(cors());
 app.use(express.json());
@@ -137,12 +136,12 @@ app.post('/login', (req, res) => {
 
         const usuario = results[0];
 
-        // ⚠️ IMPORTANTE: actualmente es texto plano (mejor migrar a bcrypt luego)
+        // VALIDACIÓN SIMPLE (texto plano)
         if (usuario.password !== password) {
             return res.status(401).json({ error: "Contraseña incorrecta" });
         }
 
-        // OBTENER MÓDULOS (PERMISOS)
+        // OBTENER MÓDULOS
         const sqlModulos = `
             SELECT m.nombre
             FROM usuario_modulos um
@@ -159,9 +158,7 @@ app.post('/login', (req, res) => {
 
             const permisos = modulos.map(m => m.nombre);
 
-            // GENERAR TOKEN JWT
-            const jwt = require('jsonwebtoken');
-
+            // GENERAR JWT
             const token = jwt.sign(
                 {
                     id: usuario.id,
@@ -182,7 +179,8 @@ app.post('/login', (req, res) => {
                     id: usuario.id,
                     nombres: usuario.nombres,
                     correo: usuario.correo,
-                    modulos: permisos
+                    modulos: permisos,
+                    rol: usuario.rol || "auxiliar"
                 }
             });
         });
