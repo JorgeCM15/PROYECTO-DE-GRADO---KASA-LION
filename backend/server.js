@@ -4,18 +4,16 @@ const cors = require('cors');
 const app = express();
 const nodemailer = require('nodemailer');
 require('dotenv').config();
-
-
-
+const jwt = require('jsonwebtoken');
 const path = require('path');
-
 const publicPath = path.resolve(__dirname, 'public');
-
+const bcrypt = require('bcrypt');
+const valido = await bcrypt.compare(password, usuario.password);
 // MIDDLEWARES
 app.use(cors());
 app.use(express.json());
 
-// SERVIR FRONTEND
+// SERVIDOR FRONTEND
 app.use(express.static(publicPath));
 
 const db = mysql.createConnection({
@@ -34,8 +32,29 @@ db.connect(err => {
     console.log("Conectado a MySQL");
 });
 
+function verificarToken(req, res, next) {
+
+    const authHeader = req.headers['authorization'];
+
+    if (!authHeader) {
+        return res.status(401).json({ error: "Token requerido" });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, usuario) => {
+
+        if (err) {
+            return res.status(403).json({ error: "Token inválido o expirado" });
+        }
+
+        req.usuario = usuario;
+        next();
+    });
+}
+
 // REGISTRAR USUARIOS
-app.post('/usuarios', (req, res) => {
+app.post('/usuarios', verificarToken, (req, res) => {
 
     const {
         nombres,
@@ -99,8 +118,6 @@ app.post('/usuarios', (req, res) => {
 });
 
 
-//LOGIN
-
 app.post('/login', (req, res) => {
 
     const { correo, password } = req.body;
@@ -120,12 +137,12 @@ app.post('/login', (req, res) => {
 
         const usuario = results[0];
 
-        // Comparación simple
+        // ⚠️ IMPORTANTE: actualmente es texto plano (mejor migrar a bcrypt luego)
         if (usuario.password !== password) {
             return res.status(401).json({ error: "Contraseña incorrecta" });
         }
 
-        // Obtener módulos
+        // OBTENER MÓDULOS (PERMISOS)
         const sqlModulos = `
             SELECT m.nombre
             FROM usuario_modulos um
@@ -140,21 +157,40 @@ app.post('/login', (req, res) => {
                 return res.status(500).json({ error: err2 });
             }
 
+            const permisos = modulos.map(m => m.nombre);
+
+            // GENERAR TOKEN JWT
+            const jwt = require('jsonwebtoken');
+
+            const token = jwt.sign(
+                {
+                    id: usuario.id,
+                    correo: usuario.correo,
+                    modulos: permisos
+                },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: '15m'
+                }
+            );
+
+            // RESPUESTA FINAL
             res.json({
                 success: true,
+                token,
                 usuario: {
                     id: usuario.id,
                     nombres: usuario.nombres,
                     correo: usuario.correo,
-                    modulos: modulos.map(m => m.nombre)
+                    modulos: permisos
                 }
             });
-
         });
 
     });
 
 });
+
 
 app.get('/usuarios', (req, res) => {
 
@@ -196,7 +232,7 @@ const transporter = nodemailer.createTransport({
 
 let tokens = {};
 
-app.post('/recuperar-password', (req, res) => {
+app.post('/recuperar-password', verificarToken, (req, res) => {
 
     const { correo } = req.body;
 
@@ -254,7 +290,7 @@ console.log("TOKEN GENERADO:", token);
 
 });
 
-app.post('/cambiar-password', (req, res) => {
+app.post('/cambiar-password', verificarToken, (req, res) => {
 
     const { token, password } = req.body;
 
@@ -314,7 +350,7 @@ app.delete('/usuarios/:id', (req, res) => {
 });
 
 //ACTUAIZAR PERMISOS
-app.post('/actualizar-permisos', (req, res) => {
+app.post('/actualizar-permisos', verificarToken, (req, res) => {
 
     const { usuario_id, permisos } = req.body;
 
@@ -352,7 +388,7 @@ app.post('/actualizar-permisos', (req, res) => {
 });
 
 // MOSTRAR PRODUCTOS
-app.get('/productos', (req, res) => {
+app.get('/productos', verificarToken, (req, res) => {
 
     db.query('SELECT * FROM productos', (err, results) => {
 
@@ -367,7 +403,7 @@ app.get('/productos', (req, res) => {
 });
 
 // CREAR PRODUCTO
-app.post('/productos', (req, res) => {
+app.post('/productos', verificarToken, (req, res) => {
     console.log(req.body);
 
     const { codigo, descripcion, categoria, precio, costo, fecha } = req.body;
@@ -407,7 +443,7 @@ app.delete('/productos/:id', (req, res) => {
 });
 
 // VENTAS
-app.post('/ventas', (req, res) => {
+app.post('/ventas', verificarToken, (req, res) => {
 
     const { venta, detalle } = req.body;
 
@@ -554,7 +590,7 @@ app.post('/ventas', (req, res) => {
 });
 
 //HISTORIAL
-app.get('/ventas', (req, res) => {
+app.get('/ventas', verificarToken, (req, res) => {
 
     const sql = `
         SELECT 
@@ -575,7 +611,7 @@ app.get('/ventas', (req, res) => {
 
 });
 
-app.get('/ventas/:id', (req, res) => {
+app.get('/ventas/:id', verificarToken,(req, res) => {
 
     const { id } = req.params;
 
@@ -602,7 +638,7 @@ app.get('/ventas/:id', (req, res) => {
 });
 
 //INGRESOS
-app.get('/ventas-disponibles', (req, res) => {
+app.get('/ventas-disponibles', verificarToken, (req, res) => {
 
     const sql = `
     SELECT 
@@ -627,7 +663,7 @@ app.get('/ventas-disponibles', (req, res) => {
 });
 
 //ingreso con ID automatico
-app.post('/ingresos', (req, res) => {
+app.post('/ingresos', verificarToken, (req, res) => {
 
     const { venta_id, fecha, monto } = req.body;
 
@@ -674,7 +710,7 @@ app.post('/ingresos', (req, res) => {
 });
 
 //historial de ingresos
-app.get('/ingresos', (req, res) => {
+app.get('/ingresos', verificarToken, (req, res) => {
 
     const sql = `
         SELECT i.id, i.venta_id, i.fecha, i.monto
@@ -692,7 +728,7 @@ app.get('/ingresos', (req, res) => {
 });
 
 //EGRESOS
-app.post('/egresos', (req, res) => {
+app.post('/egresos',verificarToken, (req, res) => {
 
     const { categoria, fecha, monto } = req.body;
 
@@ -750,7 +786,7 @@ app.post('/egresos', (req, res) => {
 });
 
 //historial de egresos
-app.get('/egresos', (req, res) => {
+app.get('/egresos', verificarToken, (req, res) => {
 
     const sql = `
         SELECT * FROM egresos
@@ -767,7 +803,7 @@ app.get('/egresos', (req, res) => {
 });
 
 //REPORTES
-app.get('/reporte', (req, res) => {
+app.get('/reporte', verificarToken, (req, res) => {
 
     const { mes, inicio, fin } = req.query;
 
@@ -815,7 +851,7 @@ app.get('/reporte', (req, res) => {
 
 //INDEX
 
-app.get('/dashboard', (req, res) => {
+app.get('/dashboard', verificarToken, (req, res) => {
 
     const hoy = new Date();
     const mes = hoy.getMonth() + 1;

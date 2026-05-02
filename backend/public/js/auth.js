@@ -1,119 +1,176 @@
-$(document).ready(function(){
+// FUNCIONES GLOBALES
 
+function cerrarSesion() {
+    alert("Sesión cerrada");
 
-// VALIDAR SESIÓN
-var usuario = JSON.parse(localStorage.getItem("usuarioActivo"));
+    localStorage.removeItem("usuarioActivo");
+    localStorage.removeItem("token");
 
-if(!usuario){
     window.location.href = "login.html";
-    return;
 }
 
-
-usuario.permisos = (usuario && usuario.modulos) ? usuario.modulos : [];
-
-
-if(usuario.correo === "admin.contable.kasalion@gmail.com"){
-    usuario.permisos = [
-        "admin",
-        "panel","ingresos","egresos",
-        "ventas","productos","reportes"
-    ];
+function parseJwt(token) {
+    try {
+        return JSON.parse(atob(token.split('.')[1]));
+    } catch (e) {
+        return null;
+    }
 }
 
-// MOSTRAR NOMBRE
-if(usuario.nombres){
-    var nombreCompleto = usuario.nombres;
-    $('.text-gray-600.small').text(nombreCompleto);
+function validarToken() {
+    const token = localStorage.getItem("token");
+
+    if (!token) return false;
+
+    const data = parseJwt(token);
+
+    if (!data || !data.exp) return false;
+
+    const ahora = Math.floor(Date.now() / 1000);
+
+    if (data.exp < ahora) {
+        cerrarSesion();
+        return false;
+    }
+
+    return true;
 }
 
-// OCULTAR TODO EL MENÚ
-$('#menuPanel').hide();
-$('#menuAdmin').hide();
-$('#menuReportes').hide();
-$('#menuVentas').hide();
-$('#menuProductos').hide();
-$('#menuFinanzas').hide();
-$('#menuIngresos').hide();
-$('#menuEgresos').hide();
+// DOCUMENT READY
+$(document).ready(function () {
 
-// MOSTRAR SEGÚN PERMISOS
-usuario.permisos.forEach(function(p){
+    // VALIDAR SESIÓN
+    var usuario = JSON.parse(localStorage.getItem("usuarioActivo"));
+    var token = localStorage.getItem("token");
 
-    if(p === "panel") $('#menuPanel').show();
-
-    if(p === "reportes") $('#menuReportes').show();
-
-    if(p === "ventas") $('#menuVentas').show();
-
-    if(p === "productos") $('#menuProductos').show();
-
-    if(p === "ingresos"){
-        $('#menuFinanzas').show();
-        $('#menuIngresos').show();
+    if (!usuario || !token) {
+        window.location.href = "login.html";
+        return;
     }
 
-    if(p === "egresos"){
-        $('#menuFinanzas').show();
-        $('#menuEgresos').show();
+    if (!validarToken()) {
+        return;
     }
 
-    if(p === "admin"){
-        $('#menuAdmin').show();
-        $('#menuPanel').show();
-        $('#menuReportes').show();
-        $('#menuVentas').show();
-        $('#menuProductos').show();
-        $('#menuFinanzas').show();
-        $('#menuIngresos').show();
-        $('#menuEgresos').show();
+    // CONTROL DE INACTIVIDAD
+    let tiempoInactividad;
+    const LIMITE = 15 * 60 * 1000;
+
+    function resetearTimer() {
+        clearTimeout(tiempoInactividad);
+        tiempoInactividad = setTimeout(cerrarSesion, LIMITE);
     }
 
-});
+    ["mousemove", "keydown", "click", "scroll"].forEach(function (event) {
+        window.addEventListener(event, resetearTimer);
+    });
 
-// OCULTAR SECCIONES VACÍAS
-$('.sidebar-heading').each(function(){
+    resetearTimer();
 
-    var section = $(this);
-    var nextItems = section.nextUntil('.sidebar-heading');
+    // PERMISOS
+    usuario.permisos = usuario.modulos || [];
+    usuario.rol = usuario.rol || "auxiliar";
 
-    var visible = false;
+    if (usuario.rol === "admin") {
+        usuario.permisos = [
+            "panel",
+            "ingresos",
+            "egresos",
+            "ventas",
+            "productos",
+            "reportes",
+            "admin"
+        ];
+    }
 
-    nextItems.each(function(){
-        if($(this).is(':visible')){
-            visible = true;
+    // ENVIAR TOKEN EN AJAX
+    $.ajaxSetup({
+        beforeSend: function (xhr) {
+            const token = localStorage.getItem("token");
+            if (token) {
+                xhr.setRequestHeader("Authorization", "Bearer " + token);
+            }
         }
     });
 
-    if(!visible){
-        section.hide();
+    // MOSTRAR NOMBRE
+    if (usuario.nombres) {
+        $('.text-gray-600.small').text(usuario.nombres);
     }
 
-});
+    // MENÚS
+    const menus = {
+        panel: "#menuPanel",
+        admin: "#menuAdmin",
+        reportes: "#menuReportes",
+        ventas: "#menuVentas",
+        productos: "#menuProductos",
+        ingresos: "#menuIngresos",
+        egresos: "#menuEgresos"
+    };
 
-// BLOQUEAR ACCESO POR URL
-var paginaActual = window.location.pathname.split("/").pop();
+    Object.values(menus).forEach(menu => $(menu).hide());
+    $("#menuFinanzas").hide();
 
-var permisosPaginas = {
-    "index.html": "panel",
-    "reports.html": "reportes",
-    "new-sale.html": "ventas",
-    "record.html": "ventas",
-    "products.html": "productos",
-    "income.html": "ingresos",
-    "expenses.html": "egresos",
-    "users.html": "admin",
-    "admin-users.html": "admin"
-};
+    usuario.permisos.forEach(function (permiso) {
 
-if(permisosPaginas[paginaActual]){
+        if (menus[permiso]) {
+            $(menus[permiso]).show();
+        }
 
-    var permisoNecesario = permisosPaginas[paginaActual];
+        if (permiso === "ingresos" || permiso === "egresos") {
+            $("#menuFinanzas").show();
+        }
 
-    if(!usuario.permisos.includes(permisoNecesario) && !usuario.permisos.includes("admin")){
+        if (permiso === "admin") {
+            Object.values(menus).forEach(menu => $(menu).show());
+            $("#menuFinanzas").show();
+        }
+    });
+
+    // OCULTAR SECCIONES VACÍAS
+    $('.sidebar-heading').each(function () {
+
+        var section = $(this);
+        var nextItems = section.nextUntil('.sidebar-heading');
+
+        var visible = false;
+
+        nextItems.each(function () {
+            if ($(this).is(':visible')) {
+                visible = true;
+            }
+        });
+
+        if (!visible) {
+            section.hide();
+        }
+    });
+
+    // BLOQUEO POR URL
+    var paginaActual = window.location.pathname.split("/").pop();
+
+    var permisosPaginas = {
+        "index.html": "panel",
+        "reports.html": "reportes",
+        "new-sale.html": "ventas",
+        "record.html": "ventas",
+        "products.html": "productos",
+        "income.html": "ingresos",
+        "expenses.html": "egresos",
+        "users.html": "admin",
+        "admin-users.html": "admin"
+    };
+
+    var permisoRequerido = permisosPaginas[paginaActual];
+
+    if (
+        permisoRequerido &&
+        !usuario.permisos.includes(permisoRequerido) &&
+        usuario.rol !== "admin"
+    ) {
         alert("No tienes acceso a esta sección");
         window.location.href = "index.html";
     }
-}
 
 });

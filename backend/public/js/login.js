@@ -1,18 +1,20 @@
 const API = window.location.origin;
 
-$(document).ready(function(){
+$(document).ready(function () {
 
-    $('#btnLogin').on('click', function(e){
+    $('#btnLogin').on('click', function (e) {
 
         e.preventDefault();
 
         var correo = $('#exampleInputEmail').val().trim();
         var password = $('#exampleInputPassword').val().trim();
 
-        if(correo === "" || password === ""){
+        if (correo === "" || password === "") {
             alert("Ingrese correo y contraseña");
             return;
         }
+
+        $('#btnLogin').prop('disabled', true).text("Ingresando...");
 
         $.ajax({
             url: `${API}/login`,
@@ -22,12 +24,14 @@ $(document).ready(function(){
                 correo: correo,
                 password: password
             }),
-            success: function(respuesta){
+
+            success: function (respuesta) {
 
                 console.log("RESPUESTA LOGIN:", respuesta);
 
                 if (respuesta.success) {
 
+                    localStorage.setItem("token", respuesta.token);
                     localStorage.setItem("usuarioActivo", JSON.stringify(respuesta.usuario));
 
                     window.location.href = "index.html";
@@ -35,10 +39,21 @@ $(document).ready(function(){
                 } else {
                     alert(respuesta.error || "Error al iniciar sesión");
                 }
+
+                $('#btnLogin').prop('disabled', false).text("Ingresar");
             },
-            error: function(err){
-                console.error("ERROR LOGIN:", err);
-                alert("Error de conexión con el servidor");
+
+            error: function (xhr) {
+
+                console.error("ERROR LOGIN:", xhr);
+
+                if (xhr.status === 401) {
+                    alert("Credenciales incorrectas");
+                } else {
+                    alert("Error del servidor");
+                }
+
+                $('#btnLogin').prop('disabled', false).text("Ingresar");
             }
         });
 

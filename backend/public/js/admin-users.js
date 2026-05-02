@@ -25,7 +25,12 @@ function cargarUsuarios(){
 
                 var nombreCompleto = `${u.nombres} ${u.primer_apellido} ${u.segundo_apellido || ""}`;
 
-                var permisos = u.permisos ? u.permisos.split(",") : [];
+                var permisos = [];
+                    if (Array.isArray(u.permisos)) {
+                        permisos = u.permisos;
+                        } else if (typeof u.permisos === "string") {
+                            permisos = u.permisos.split(",").map(p => p.trim());
+                        }
 
                 tabla.append(`
                 <tr>
