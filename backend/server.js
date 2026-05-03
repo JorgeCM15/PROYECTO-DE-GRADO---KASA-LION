@@ -2,11 +2,12 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const app = express();
-const nodemailer = require('nodemailer');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const publicPath = path.resolve(__dirname, 'public');
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // MIDDLEWARES
 app.use(cors());
@@ -216,28 +217,16 @@ app.get('/usuarios', (req, res) => {
 
 const crypto = require('crypto');
 
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
-});
-
 let tokens = {};
 
-// RECUPERAR CONTRASEÑA
-app.post('/recuperar-password', (req, res) => {
+// // RECUPERAR CONTRASEÑA
+app.post('/recuperar-password', async (req, res) => {
 
     const { correo } = req.body;
 
     const sql = "SELECT * FROM usuarios WHERE TRIM(LOWER(correo)) = TRIM(LOWER(?))";
 
-    db.query(sql, [correo], (err, results) => {
+    db.query(sql, [correo], async (err, results) => {
 
         if (err) {
             console.error(err);
@@ -248,39 +237,40 @@ app.post('/recuperar-password', (req, res) => {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        // generar token
+        // 🔹 Generar token
         const token = crypto.randomBytes(20).toString('hex');
 
         tokens[token] = {
             correo,
-            expira: Date.now() + (15 * 60 * 1000) // 15 min
+            expira: Date.now() + (15 * 60 * 1000)
         };
 
         const link = `https://sgestionfinanciera-kasalion.up.railway.app/reset-password.html?token=${token}`;
 
-        const mailOptions = {
-            from: 'admin.contable.kasalion@gmail.com',
-            to: correo,
-            subject: 'RECUPERACIÓN DE CONTRASEÑA - KASA LION',
-            html: `
-                <h2>Recuperar contraseña</h2>
-                <p>Haz clic en el siguiente enlace:</p>
-                <a href="${link}">${link}</a>
-                <p>Este enlace expira en 15 minutos.</p>
-            `
-        };
+        try {
 
-        transporter.sendMail(mailOptions, (error, info) => {
+            const response = await resend.emails.send({
+                from: 'onboarding@resend.dev',
+                to: correo,
+                subject: 'RECUPERACIÓN DE CONTRASEÑA - KASA LION',
+                html: `
+                    <h2>Recuperar contraseña</h2>
+                    <p>Haz clic en el siguiente enlace:</p>
+                    <a href="${link}">${link}</a>
+                    <p>Este enlace expira en 15 minutos.</p>
+                `
+            });
 
-            if (error) {
-                console.error("ERROR GMAIL:", error);
-                return res.status(500).json({ error: error.message });
-            }
-
-            console.log("Correo enviado:", info.response);
+            console.log("📧 Resend response:", response);
 
             res.json({ success: true });
-        });
+
+        } catch (error) {
+
+            console.error("❌ ERROR RESEND:", error);
+
+            res.status(500).json({ error: "Error enviando correo" });
+        }
 
     });
 
