@@ -176,3 +176,17 @@ $(document).ready(function () {
     }
 
 });
+
+$(document).ajaxError(function (event, jqxhr) {
+
+    if (jqxhr.status === 401 || jqxhr.status === 403) {
+
+        alert("Sesión expirada, inicia sesión nuevamente");
+
+        localStorage.removeItem("token");
+        localStorage.removeItem("usuarioActivo");
+
+        window.location.href = "login.html";
+    }
+
+});

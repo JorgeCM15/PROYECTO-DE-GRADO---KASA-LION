@@ -28,6 +28,7 @@ $(document).ready(function () {
     $.ajax({
         url: `${API}/productos`, 
         type: "GET",
+        headers: getAuthHeaders(),
         success: function (data) {
 
             productos = data;
@@ -166,6 +167,7 @@ $(document).ready(function () {
         $.ajax({
             url: `${API}/ventas`,
             type: "POST",
+            headers: getAuthHeaders(),
             contentType: "application/json",
             data: JSON.stringify({
                 venta: venta,
