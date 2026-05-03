@@ -2,6 +2,10 @@ const API = window.location.hostname === "localhost"
     ? "http://localhost:3000"
     : "https://sgestionfinanciera-kasalion.up.railway.app";
 
+    function getAuthHeaders() {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: "Bearer " + token } : {};
+}
 $(document).ready(function () {
 
     var productos = [];

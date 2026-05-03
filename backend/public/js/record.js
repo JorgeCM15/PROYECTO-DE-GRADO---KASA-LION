@@ -2,7 +2,12 @@ const API = window.location.hostname === "localhost"
     ? "http://localhost:3000"
     : "https://sgestionfinanciera-kasalion.up.railway.app";
 
-$(document).ready(function () {
+function getAuthHeaders() {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: "Bearer " + token } : {};
+}
+
+    $(document).ready(function () {
 
     function formatoMoneda(numero) {
         return new Intl.NumberFormat('es-CO', {
@@ -23,8 +28,9 @@ $(document).ready(function () {
 
     // CARGAR HISTORIAL DESDE BACKEND
     $.ajax({
-        url: `${API}/ventas`,
-        type: "GET",
+    url: `${API}/ventas`,
+    type: "GET",
+    headers: getAuthHeaders(),
         success: function (ventas) {
 
             ventas.forEach(function (venta) {
