@@ -21,7 +21,11 @@ $(document).ready(function(){
             alert("Las contraseñas no coinciden");
             return;
         }
-
+        if (!token) {
+        alert("Token inválido o faltante");
+        window.location.href = "login.html";
+        return;
+        }
         $.ajax({
             url: `${API}/cambiar-password`,
             type: "POST",
@@ -34,8 +38,9 @@ $(document).ready(function(){
                 alert("Contraseña actualizada correctamente");
                 window.location.href = "login.html";
             },
-            error: function(){
-                alert("Token inválido o expirado");
+            error: function(xhr){
+            const msg = xhr.responseJSON?.error || "Error en el servidor";
+            alert(msg);
             }
         });
 

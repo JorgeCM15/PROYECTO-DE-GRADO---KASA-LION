@@ -230,7 +230,8 @@ const transporter = nodemailer.createTransport({
 
 let tokens = {};
 
-app.post('/recuperar-password', verificarToken, (req, res) => {
+// RECUPERAR CONTRASEÑA
+app.post('/recuperar-password', (req, res) => {
 
     const { correo } = req.body;
 
@@ -238,68 +239,71 @@ app.post('/recuperar-password', verificarToken, (req, res) => {
 
     db.query(sql, [correo], (err, results) => {
 
-        if (err) return res.status(500).json(err);
+        if (err) {
+            console.error(err);
+            return res.status(500).json(err);
+        }
 
         if (results.length === 0) {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        // Generar token
+        // generar token
         const token = crypto.randomBytes(20).toString('hex');
 
         tokens[token] = {
             correo,
-            expira: Date.now() + (15 * 60 * 1000)
+            expira: Date.now() + (15 * 60 * 1000) // 15 min
         };
 
         const link = `https://proyecto-de-grado-kasa-lion-production.up.railway.app/reset-password.html?token=${token}`;
 
-        // CONFIGURAR CORREO
         const mailOptions = {
             from: 'admin.contable.kasalion@gmail.com',
             to: correo,
             subject: 'RECUPERACIÓN DE CONTRASEÑA - KASA LION',
             html: `
                 <h2>Recuperar contraseña</h2>
-                <p>Haz clic en el siguiente enlace para cambiar tu contraseña:</p>
+                <p>Haz clic en el siguiente enlace:</p>
                 <a href="${link}">${link}</a>
                 <p>Este enlace expira en 15 minutos.</p>
             `
         };
-console.log("ENVIANDO CORREO A:", correo);
-console.log("TOKEN GENERADO:", token);
-        // 📤 ENVIAR CORREO
+
         transporter.sendMail(mailOptions, (error, info) => {
 
-    if (error) {
-        console.error("❌ ERROR REAL DE GMAIL:", error);
+            if (error) {
+                console.error("ERROR GMAIL:", error);
+                return res.status(500).json({ error: error.message });
+            }
 
-        return res.status(500).json({ 
-            error: error.message 
+            console.log("Correo enviado:", info.response);
+
+            res.json({ success: true });
         });
-    }
-
-    console.log("Correo enviado:", info.response);
-
-    res.json({ success: true });
-});
 
     });
 
 });
 
-app.post('/cambiar-password', verificarToken, (req, res) => {
+//CAMBIAR CONTRASEÑA
+app.post('/cambiar-password', (req, res) => {
 
     const { token, password } = req.body;
 
-    // Verificar token
+    // validar token recibido
+    if (!token) {
+        return res.status(400).json({ error: "Token requerido" });
+    }
+
+    // validar existencia
     if (!tokens[token]) {
         return res.status(400).json({ error: "Token inválido" });
     }
 
     const data = tokens[token];
 
-    // Verificar expiración
+    // validar expiración
     if (Date.now() > data.expira) {
         delete tokens[token];
         return res.status(400).json({ error: "Token expirado" });
@@ -307,7 +311,6 @@ app.post('/cambiar-password', verificarToken, (req, res) => {
 
     const correo = data.correo;
 
-    // Actualizar contraseña
     const sql = `
         UPDATE usuarios 
         SET password = ?
@@ -321,7 +324,7 @@ app.post('/cambiar-password', verificarToken, (req, res) => {
             return res.status(500).json(err);
         }
 
-        // Eliminar token usado
+        // 🔥 eliminar token usado (IMPORTANTE)
         delete tokens[token];
 
         res.json({ success: true });
