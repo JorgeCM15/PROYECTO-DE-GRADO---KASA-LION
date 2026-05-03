@@ -250,7 +250,7 @@ app.post('/recuperar-password', async (req, res) => {
         try {
 
             const response = await resend.emails.send({
-                from: 'onboarding@resend.dev',
+                from: 'admin.contable.kasalion@gmail.com',
                 to: correo,
                 subject: 'RECUPERACIÓN DE CONTRASEÑA - KASA LION',
                 html: `
