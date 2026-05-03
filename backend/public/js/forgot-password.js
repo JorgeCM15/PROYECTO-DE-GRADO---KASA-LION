@@ -6,7 +6,11 @@ console.log("forgot-password.js cargado");
 
 $(document).ready(function(){
 
+    console.log("DOM listo");
+
     $('#btnRecuperar').on('click', function(){
+
+        console.log("CLICK DETECTADO");
 
         const correo = $('#exampleInputEmail').val().trim().toLowerCase();
 
@@ -20,11 +24,13 @@ $(document).ready(function(){
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify({ correo }),
+
             success: function(){
                 alert("Revisa tu correo para recuperar la contraseña");
             },
+
             error: function(xhr){
-                console.log(xhr.responseText);
+                console.log("ERROR:", xhr.responseText);
                 alert(xhr.responseJSON?.error || "Error en el servidor");
             }
         });
