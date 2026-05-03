@@ -256,7 +256,7 @@ app.post('/recuperar-password', (req, res) => {
             expira: Date.now() + (15 * 60 * 1000) // 15 min
         };
 
-        const link = `https://proyecto-de-grado-kasa-lion-production.up.railway.app/reset-password.html?token=${token}`;
+        const link = `https://sgestionfinanciera-kasalion.up.railway.app/reset-password.html?token=${token}`;
 
         const mailOptions = {
             from: 'admin.contable.kasalion@gmail.com',
