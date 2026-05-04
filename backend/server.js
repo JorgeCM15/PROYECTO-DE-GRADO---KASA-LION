@@ -793,7 +793,8 @@ app.get('/egresos', verificarToken, (req, res) => {
 
 });
 
-// REPORTE
+//REPORTES
+
 app.get('/reporte', verificarToken, (req, res) => {
 
     const { mes, inicio, fin } = req.query;
@@ -838,28 +839,32 @@ app.get('/reporte', verificarToken, (req, res) => {
         FROM egresos e
         LEFT JOIN ventas v ON e.venta_id = v.id
         LEFT JOIN usuarios u ON e.usuario_id = u.id
-        WHERE MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ?
+        WHERE MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ? AND?
 
         ORDER BY fecha ASC
     `;
 
     db.query(sql, [
-        mes, inicio, fin,
-        mes, inicio, fin
-    ], (err, results) => {
+    mes, inicio, fin,
+    mes, inicio, fin
+], (err, results) => {
 
-        if (err) {
-            console.error("ERROR REPORTE:", err.sqlMessage || err);
-            return res.status(500).json(err);
-        }
+    if (err) {
+        console.error("❌ ERROR REPORTE COMPLETO:", err);
+        return res.status(500).json({
+            message: err.message,
+            sqlMessage: err.sqlMessage,
+            code: err.code
+        });
+    }
 
-        res.json(results);
-    });
+    res.json(results);
+});
 
 });
 
-
 //INDEX
+
 app.get('/dashboard', verificarToken, (req, res) => {
 
     const hoy = new Date();
