@@ -802,45 +802,46 @@ app.get('/reporte', verificarToken, (req, res) => {
 
     const sql = `
         SELECT 
-            'Ingreso' AS tipo,
-            i.id,
-            i.fecha,
+    'Ingreso' AS tipo,
+    i.id,
+    i.fecha,
 
-            v.primer_nombre,
-            v.segundo_nombre,
-            v.primer_apellido,
-            v.segundo_apellido,
-            v.numero_documento,
-            v.correo,
+    v.primer_nombre,
+    v.segundo_nombre,
+    v.primer_apellido,
+    v.segundo_apellido,
+    v.numero_documento,
+    v.correo,
 
-            'Venta' AS categoria,
-            i.monto
+    'Venta' AS categoria,
+    i.monto
 
-        FROM ingresos i
-        JOIN ventas v ON i.venta_id = v.id
-        WHERE MONTH(i.fecha) = ? AND DAY(i.fecha) BETWEEN ? AND ?
+FROM ingresos i
+JOIN ventas v ON i.venta_id = v.id
+WHERE MONTH(i.fecha) = ? AND DAY(i.fecha) BETWEEN ? AND ?
 
-        UNION ALL
+UNION ALL
 
-        SELECT 
+SELECT 
     'Egreso' AS tipo,
     e.id,
     e.fecha,
 
     u.nombres AS primer_nombre,
-    u.primer_apellido AS primer_apellido,
-    u.segundo_apellido AS segundo_apellido,
-
+    u.segundo_nombre,
+    u.primer_apellido,
+    u.segundo_apellido,
     '' AS numero_documento,
     '' AS correo,
 
     e.categoria,
     e.monto
+
 FROM egresos e
 LEFT JOIN usuarios u ON e.usuario_id = u.id
 WHERE MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ? AND ?
 
-        ORDER BY fecha ASC
+ORDER BY fecha ASC;
     `;
 
     db.query(sql, [
