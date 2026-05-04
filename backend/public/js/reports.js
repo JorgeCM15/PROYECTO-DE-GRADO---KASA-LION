@@ -22,10 +22,12 @@ $(document).ready(function(){
         var fin = (tipo === "quincenal") ? 15 : 31;
 
         $.ajax({
-            url: `${API}/reporte?mes=${mesSeleccionado}&inicio=${inicio}&fin=${fin}`,
-            type: "GET",
-            headers: getAuthHeaders(),
-            success: function(data){
+    url: `${API}/reporte?mes=${mesSeleccionado}&inicio=${inicio}&fin=${fin}`,
+    type: "GET",
+    headers: {
+        Authorization: "Bearer " + localStorage.getItem("token")
+    },
+    success: function(data){
 
                 let ws_data = [];
 
