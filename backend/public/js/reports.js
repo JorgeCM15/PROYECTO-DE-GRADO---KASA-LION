@@ -2,6 +2,10 @@ const API = window.location.hostname === "localhost"
     ? "http://localhost:3000"
     : "https://sgestionfinanciera-kasalion.up.railway.app";
 
+    function getAuthHeaders() {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: "Bearer " + token } : {};
+}
 $(document).ready(function(){
 
     $('#generarExcel').on('click', function(){
@@ -20,6 +24,7 @@ $(document).ready(function(){
         $.ajax({
             url: `${API}/reporte?mes=${mesSeleccionado}&inicio=${inicio}&fin=${fin}`,
             type: "GET",
+            headers: getAuthHeaders(),
             success: function(data){
 
                 let ws_data = [];

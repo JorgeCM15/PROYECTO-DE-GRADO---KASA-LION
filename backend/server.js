@@ -839,7 +839,7 @@ app.get('/reporte', verificarToken, (req, res) => {
         FROM egresos e
         LEFT JOIN ventas v ON e.venta_id = v.id
         LEFT JOIN usuarios u ON e.usuario_id = u.id
-        WHERE MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ? AND?
+        WHERE MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ? AND ?
 
         ORDER BY fecha ASC
     `;
