@@ -793,7 +793,6 @@ app.get('/egresos', verificarToken, (req, res) => {
 
 });
 
-//REPORTES
 app.get('/reporte', verificarToken, (req, res) => {
 
     const { mes, inicio, fin } = req.query;
@@ -803,14 +802,17 @@ app.get('/reporte', verificarToken, (req, res) => {
             'Ingreso' AS tipo,
             i.id,
             i.fecha,
+
             v.primer_nombre,
             v.segundo_nombre,
             v.primer_apellido,
             v.segundo_apellido,
             v.numero_documento,
             v.correo,
+
             'Venta' AS categoria,
             i.monto
+
         FROM ingresos i
         JOIN ventas v ON i.venta_id = v.id
         WHERE MONTH(i.fecha) = ? AND DAY(i.fecha) BETWEEN ? AND ?
@@ -821,17 +823,52 @@ app.get('/reporte', verificarToken, (req, res) => {
             'Egreso' AS tipo,
             e.id,
             e.fecha,
-            'NA','NA','NA','NA',
-            'NA','NA',
+
+            v.primer_nombre,
+            v.segundo_nombre,
+            v.primer_apellido,
+            v.segundo_apellido,
+            v.numero_documento,
+            v.correo,
+
             e.categoria,
             e.monto
+
         FROM egresos e
-        WHERE MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ? AND ?
+        LEFT JOIN ventas v ON e.venta_id = v.id
+        WHERE e.categoria = 'Compras'
+          AND MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ? AND ?
+
+        UNION ALL
+
+        SELECT 
+            'Egreso' AS tipo,
+            e.id,
+            e.fecha,
+
+            u.nombres AS primer_nombre,
+            '' AS segundo_nombre,
+            '' AS primer_apellido,
+            '' AS segundo_apellido,
+            '' AS numero_documento,
+            '' AS correo,
+
+            e.categoria,
+            e.monto
+
+        FROM egresos e
+        LEFT JOIN usuarios u ON e.usuario_id = u.id
+        WHERE e.categoria != 'Compras'
+          AND MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ? AND ?
 
         ORDER BY fecha ASC
     `;
 
-    db.query(sql, [mes, inicio, fin, mes, inicio, fin], (err, results) => {
+    db.query(sql, [
+        mes, inicio, fin,   // ingresos
+        mes, inicio, fin,   // compras
+        mes, inicio, fin    // egresos manuales
+    ], (err, results) => {
 
         if (err) return res.status(500).json(err);
 
@@ -839,7 +876,6 @@ app.get('/reporte', verificarToken, (req, res) => {
     });
 
 });
-
 //INDEX
 
 app.get('/dashboard', verificarToken, (req, res) => {
