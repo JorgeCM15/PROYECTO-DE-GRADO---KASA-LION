@@ -50,7 +50,6 @@ Cada módulo permite realizar acciones específicas relacionadas con la gestión
   El sistema consolida los ingresos y egresos y permite descargar el archivo correspondiente en formato .xlsx.
 
   3.6. Gestión de usuarios (solo para administrador)
-  
       3.6.1. Crear nuevos usuarios
       El sistema permite crear nuevos usuarios y asignar roles/permisos.
       
