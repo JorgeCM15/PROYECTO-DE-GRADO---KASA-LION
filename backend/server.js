@@ -721,6 +721,7 @@ app.get('/ingresos', verificarToken, (req, res) => {
 //EGRESOS
 app.post('/egresos',verificarToken, (req, res) => {
 
+    const usuario_id = req.usuario.id;
     const { categoria, fecha, monto } = req.body;
 
     const f = new Date(fecha);
@@ -761,11 +762,11 @@ app.post('/egresos',verificarToken, (req, res) => {
         const nuevoId = `${prefijo}${String(consecutivo).padStart(2, '0')}`;
 
         const sqlInsert = `
-            INSERT INTO egresos (id, categoria, fecha, monto)
-            VALUES (?, ?, ?, ?)
+        INSERT INTO egresos (id, categoria, fecha, monto, usuario_id)
+        VALUES (?, ?, ?, ?, ?)
         `;
 
-        db.query(sqlInsert, [nuevoId, categoria, fecha, monto], (err2) => {
+db.query(sqlInsert, [nuevoId, categoria, fecha, monto, usuario_id], (err2) => {
 
             if (err2) return res.status(500).json(err2);
 
@@ -822,24 +823,20 @@ app.get('/reporte', verificarToken, (req, res) => {
         UNION ALL
 
         SELECT 
-            'Egreso' AS tipo,
-            e.id,
-            e.fecha,
-
-            IFNULL(v.primer_nombre, IFNULL(u.nombres, 'NA')) AS primer_nombre,
-            '' AS segundo_nombre,
-            '' AS primer_apellido,
-            '' AS segundo_apellido,
-            '' AS numero_documento,
-            '' AS correo,
-
-            e.categoria,
-            e.monto
-
-        FROM egresos e
-        LEFT JOIN ventas v ON e.venta_id = v.id
-        LEFT JOIN usuarios u ON e.usuario_id = u.id
-        WHERE MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ? AND ?
+    'Egreso' AS tipo,
+    e.id,
+    e.fecha,
+    u.nombres AS primer_nombre,
+    '' AS segundo_nombre,
+    '' AS primer_apellido,
+    '' AS segundo_apellido,
+    '' AS numero_documento,
+    '' AS correo,
+    e.categoria,
+    e.monto
+FROM egresos e
+LEFT JOIN usuarios u ON e.usuario_id = u.id
+WHERE MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ? AND ?
 
         ORDER BY fecha ASC
     `;
