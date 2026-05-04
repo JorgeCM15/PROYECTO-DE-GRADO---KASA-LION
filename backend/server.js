@@ -793,6 +793,7 @@ app.get('/egresos', verificarToken, (req, res) => {
 
 });
 
+// REPORTE
 app.get('/reporte', verificarToken, (req, res) => {
 
     const { mes, inicio, fin } = req.query;
@@ -824,29 +825,7 @@ app.get('/reporte', verificarToken, (req, res) => {
             e.id,
             e.fecha,
 
-            v.primer_nombre,
-            v.segundo_nombre,
-            v.primer_apellido,
-            v.segundo_apellido,
-            v.numero_documento,
-            v.correo,
-
-            e.categoria,
-            e.monto
-
-        FROM egresos e
-        LEFT JOIN ventas v ON e.venta_id = v.id
-        WHERE e.categoria = 'Compras'
-          AND MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ? AND ?
-
-        UNION ALL
-
-        SELECT 
-            'Egreso' AS tipo,
-            e.id,
-            e.fecha,
-
-            u.nombres AS primer_nombre,
+            IFNULL(v.primer_nombre, IFNULL(u.nombres, 'NA')) AS primer_nombre,
             '' AS segundo_nombre,
             '' AS primer_apellido,
             '' AS segundo_apellido,
@@ -857,27 +836,30 @@ app.get('/reporte', verificarToken, (req, res) => {
             e.monto
 
         FROM egresos e
+        LEFT JOIN ventas v ON e.venta_id = v.id
         LEFT JOIN usuarios u ON e.usuario_id = u.id
-        WHERE e.categoria != 'Compras'
-          AND MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ? AND ?
+        WHERE MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ?
 
         ORDER BY fecha ASC
     `;
 
     db.query(sql, [
-        mes, inicio, fin,   // ingresos
-        mes, inicio, fin,   // compras
-        mes, inicio, fin    // egresos manuales
+        mes, inicio, fin,
+        mes, inicio, fin
     ], (err, results) => {
 
-        if (err) return res.status(500).json(err);
+        if (err) {
+            console.error("ERROR REPORTE:", err.sqlMessage || err);
+            return res.status(500).json(err);
+        }
 
         res.json(results);
     });
 
 });
-//INDEX
 
+
+//INDEX
 app.get('/dashboard', verificarToken, (req, res) => {
 
     const hoy = new Date();
