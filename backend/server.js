@@ -826,12 +826,14 @@ app.get('/reporte', verificarToken, (req, res) => {
     'Egreso' AS tipo,
     e.id,
     e.fecha,
+
     u.nombres AS primer_nombre,
-    '' AS segundo_nombre,
-    '' AS primer_apellido,
-    '' AS segundo_apellido,
+    u.primer_apellido AS primer_apellido,
+    u.segundo_apellido AS segundo_apellido,
+
     '' AS numero_documento,
     '' AS correo,
+
     e.categoria,
     e.monto
 FROM egresos e
