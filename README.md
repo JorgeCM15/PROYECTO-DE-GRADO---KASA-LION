@@ -42,7 +42,7 @@ Cada módulo permite realizar acciones específicas relacionadas con la gestión
   En este campo el usuario podrá ver los ingresos registrados.
 
   3.4. Registro de egresos
-  Permite registrar los egresos, el usuario selecciona la categoría del egreso y el valor del egreso, luego hace clic en guardar.
+  Permite registrar los egresos, el usuario selecciona la categoría del egreso y el valor del egreso, luego hace clic en       guardar.
   En este campo el usuario podrá ver los ingresos registrados.
 
   3.5. Reportes (solo para administrador)
@@ -50,11 +50,9 @@ Cada módulo permite realizar acciones específicas relacionadas con la gestión
   El sistema consolida los ingresos y egresos y permite descargar el archivo correspondiente en formato .xlsx.
 
   3.6. Gestión de usuarios (solo para administrador)
-      3.6.1. Crear nuevos usuarios
-      El sistema permite crear nuevos usuarios y asignar roles/permisos.
       
-      3.6.2. Administrar usuarios
-      El sistema permite modificar los permisos o eliminar usuarios existentes
+  * Crear nuevos usuarios: El sistema permite crear nuevos usuarios y asignar roles/permisos.
+  * Administrar usuarios: El sistema permite modificar los permisos o eliminar usuarios existentes
 
 El aplicativo ha sido diseñado con una interfaz intuitiva y de fácil navegación, permitiendo a los usuarios interactuar con los diferentes módulos sin necesidad de conocimientos técnicos avanzados.
 Este instructivo proporciona una guía básica para comprender el funcionamiento general del sistema.
