@@ -828,7 +828,7 @@ SELECT
     e.fecha,
 
     u.nombres AS primer_nombre,
-    u.segundo_nombre,
+    '' AS segundo_nombre,
     u.primer_apellido,
     u.segundo_apellido,
     '' AS numero_documento,
@@ -842,6 +842,7 @@ LEFT JOIN usuarios u ON e.usuario_id = u.id
 WHERE MONTH(e.fecha) = ? AND DAY(e.fecha) BETWEEN ? AND ?
 
 ORDER BY fecha ASC;
+
     `;
 
     db.query(sql, [
