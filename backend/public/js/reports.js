@@ -20,6 +20,7 @@ $(document).ready(function(){
         $.ajax({
             url: `${API}/reporte?mes=${mesSeleccionado}&inicio=${inicio}&fin=${fin}`,
             type: "GET",
+            headers: getAuthHeaders(),
             success: function(data){
 
                 let ws_data = [];
