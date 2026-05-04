@@ -121,7 +121,8 @@ function llenarFiltros(data){
 function renderTodo(){
     renderCards();
     renderLinea();
-    renderComparativos();
+    renderComparativoIngresos();
+    renderComparativoEgresos();
     renderPieMensual();
     renderPieAnual();
 }
@@ -142,7 +143,7 @@ function renderCards(){
 
         if(f.getMonth() == mes && f.getFullYear() == anio){
 
-            if(item.tipo === "ingreso"){
+            if(item.tipo?.toLowerCase().trim() === "ingreso"){
                 ingresos += Number(item.monto);
             } else {
                 egresos += Number(item.monto);
@@ -160,23 +161,26 @@ function renderLinea(){
 
     let mes = $('#filtroMesDiario').val();
     let anio = $('#filtroAnioDiario').val();
-
     if(!mes || !anio) return;
+
+    let canvas = document.getElementById('graficoBarras');
+    if(!canvas) return;
 
     if(chartLinea) chartLinea.destroy();
 
-    let diasEnMes = new Date(anio, Number(mes)+1, 0).getDate();
+    let diasEnMes = new Date(anio, Number(mes) + 1, 0).getDate();
 
     let ingresos = new Array(diasEnMes).fill(0);
     let egresos = new Array(diasEnMes).fill(0);
 
-    datosGlobales.forEach(item=>{
+    datosGlobales.forEach(item => {
         let f = new Date(item.fecha);
 
         if(f.getMonth() == mes && f.getFullYear() == anio){
+
             let dia = f.getDate() - 1;
 
-            if(item.tipo === "ingreso"){
+            if(item.tipo?.toLowerCase().trim() === "ingreso"){
                 ingresos[dia] += Number(item.monto);
             } else {
                 egresos[dia] += Number(item.monto);
@@ -184,88 +188,128 @@ function renderLinea(){
         }
     });
 
-    let dias = Array.from({length:diasEnMes},(_,i)=>i+1);
+    let dias = Array.from({length: diasEnMes}, (_, i) => i + 1);
 
-    chartLinea = new Chart(document.getElementById('graficoBarras'), {
-        type:'line',
-        data:{
-            labels:dias,
-            datasets:[
+    chartLinea = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: dias,
+            datasets: [
                 {
-                    label:'Ingresos',
-                    data:ingresos,
-                    borderColor:'green',
-                    backgroundColor:'rgba(0,255,0,0.2)',
-                    fill:true,
-                    tension:0.3
+                    label: 'Ingresos',
+                    data: ingresos,
+                    borderColor: 'green',
+                    backgroundColor: 'rgba(0,255,0,0.2)',
+                    fill: true,
+                    tension: 0.3
                 },
                 {
-                    label:'Egresos',
-                    data:egresos,
-                    borderColor:'red',
-                    backgroundColor:'rgba(255,0,0,0.2)',
-                    fill:true,
-                    tension:0.3
+                    label: 'Egresos',
+                    data: egresos,
+                    borderColor: 'red',
+                    backgroundColor: 'rgba(255,0,0,0.2)',
+                    fill: true,
+                    tension: 0.3
                 }
             ]
         },
-        options:{
-            responsive:true,
-            maintainAspectRatio:false,
-            scales:{
-                yAxes:[{
-                    ticks:{
-                        beginAtZero:true,
-                        callback:value=>formatoMoneda(value)
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: v => new Intl.NumberFormat('es-CO').format(v)
                     }
-                }]
+                }
             }
         }
     });
 }
 
 // COMPARATIVOS
-function renderComparativos(){
+function renderComparativoIngresos(){
 
-    let anioIng = $('#filtroAnioIngresos').val();
-    let anioEgr = $('#filtroAnioEgresos').val();
+    let anio = $('#filtroAnioIngresos').val();
+    if(!anio) return;
 
-    if(!anioIng || !anioEgr) return;
+    let canvas = document.getElementById('graficoIngresosComparativo');
+    if(!canvas) return;
 
     if(chartIngresos) chartIngresos.destroy();
+
+    let actual = 0;
+    let anterior = 0;
+
+    datosGlobales.forEach(item => {
+        let f = new Date(item.fecha);
+
+        if(item.tipo?.toLowerCase().trim() === "ingreso"){
+
+            if(f.getFullYear() == anio) actual += Number(item.monto);
+            if(f.getFullYear() == (Number(anio) - 1)) anterior += Number(item.monto);
+        }
+    });
+
+    chartIngresos = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: ['Año anterior', 'Año actual'],
+            datasets: [{
+                label: 'Ingresos',
+                data: [anterior, actual],
+                backgroundColor: ['#1cc88a', '#1cc88a']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function renderComparativoEgresos(){
+
+    let anio = $('#filtroAnioEgresos').val();
+    if(!anio) return;
+
+    let canvas = document.getElementById('graficoEgresosComparativo');
+    if(!canvas) return;
+
     if(chartEgresos) chartEgresos.destroy();
 
-    let ingA=0, ingAnt=0, egA=0, egAnt=0;
+    let actual = 0;
+    let anterior = 0;
 
-    datosGlobales.forEach(item=>{
-        let f=new Date(item.fecha);
-        let anio=f.getFullYear();
+    datosGlobales.forEach(item => {
+        let f = new Date(item.fecha);
 
-        if(item.tipo==="ingreso"){
-            if(anio==anioIng) ingA+=Number(item.monto);
-            if(anio==anioIng-1) ingAnt+=Number(item.monto);
-        }
+        if(item.tipo?.toLowerCase().trim() === "egreso"){
 
-        if(item.tipo==="egreso"){
-            if(anio==anioEgr) egA+=Number(item.monto);
-            if(anio==anioEgr-1) egAnt+=Number(item.monto);
+            if(f.getFullYear() == anio) actual += Number(item.monto);
+            if(f.getFullYear() == (Number(anio) - 1)) anterior += Number(item.monto);
         }
     });
 
-    chartIngresos=new Chart(document.getElementById('graficoIngresosComparativo'),{
-        type:'bar',
-        data:{
-            label: 'Ingresos',
-            labels:['Año Anterior','Año Actual'],
-            datasets:[{label: 'Ingresos',data:[ingAnt,ingA],backgroundColor:['green','green']}]
-        }
-    });
-
-    chartEgresos=new Chart(document.getElementById('graficoEgresosComparativo'),{
-        type:'bar',
-        data:{
-            labels:['Año Anterior','Año Actual'],
-            datasets:[{label: 'Egresos',data:[egAnt,egA],backgroundColor:['red','red']}]
+    chartEgresos = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: ['Año anterior', 'Año actual'],
+            datasets: [{
+                label: 'Egresos',
+                data: [anterior, actual],
+                backgroundColor: ['#e74a3b', '#e74a3b']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
         }
     });
 }
@@ -273,43 +317,41 @@ function renderComparativos(){
 // PIE MENSUAL
 function renderPieMensual(){
 
-    let mes=$('#filtroMesPie').val();
-    let anio=$('#filtroAnioPie').val();
-
+    let mes = $('#filtroMesPie').val();
+    let anio = $('#filtroAnioPie').val();
     if(!mes || !anio) return;
+
+    let canvas = document.getElementById('graficoTortaEgresos');
+    if(!canvas) return;
 
     if(chartPieMensual) chartPieMensual.destroy();
 
-    let obj={};
+    let obj = {};
 
-    egresosGlobales.forEach(item=>{
-        let f=new Date(item.fecha);
+    egresosGlobales.forEach(item => {
+        let f = new Date(item.fecha);
 
-        if(f.getMonth()==mes && f.getFullYear()==anio){
-            let cat=item.categoria||"Otros";
-            obj[cat]=(obj[cat]||0)+Number(item.monto);
+        if(f.getMonth() == mes && f.getFullYear() == anio){
+
+            let cat = item.categoria || "Otros";
+            obj[cat] = (obj[cat] || 0) + Number(item.monto);
         }
     });
 
-    chartPieMensual=new Chart(document.getElementById('graficoTortaEgresos'),{
-        type:'doughnut',
-        data:{
-            labels:Object.keys(obj),
-            datasets:[{
-                data:Object.values(obj),
-                backgroundColor:['#e74a3b','#f6c23e','#36b9cc','#1cc88a','#858796']
+    chartPieMensual = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(obj),
+            datasets: [{
+                data: Object.values(obj),
+                backgroundColor: ['#e74a3b','#f6c23e','#36b9cc','#1cc88a','#858796']
             }]
         },
-        options:{
-            plugins:{
-                legend:{position:'bottom'},
-                datalabels:{
-                    color:'#fff',
-                    formatter:(value,ctx)=>{
-                        let total=ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
-                        return ((value/total)*100).toFixed(1)+'%';
-                    }
-                }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
             }
         }
     });
@@ -318,41 +360,40 @@ function renderPieMensual(){
 // PIE ANUAL
 function renderPieAnual(){
 
-    let anio=$('#filtroAnioPie-2').val();
+    let anio = $('#filtroAnioPie-2').val();
     if(!anio) return;
+
+    let canvas = document.getElementById('graficoTortaEgresosAnual');
+    if(!canvas) return;
 
     if(chartPieAnual) chartPieAnual.destroy();
 
-    let obj={};
+    let obj = {};
 
-    egresosGlobales.forEach(item=>{
-        let f=new Date(item.fecha);
+    egresosGlobales.forEach(item => {
+        let f = new Date(item.fecha);
 
-        if(f.getFullYear()==anio){
-            let cat=item.categoria||"Otros";
-            obj[cat]=(obj[cat]||0)+Number(item.monto);
+        if(f.getFullYear() == anio){
+
+            let cat = item.categoria || "Otros";
+            obj[cat] = (obj[cat] || 0) + Number(item.monto);
         }
     });
 
-    chartPieAnual=new Chart(document.getElementById('graficoTortaEgresosAnual'),{
-        type:'doughnut',
-        data:{
-            labels:Object.keys(obj),
-            datasets:[{
-                data:Object.values(obj),
-                backgroundColor:['#4e73df','#1cc88a','#36b9cc','#f6c23e','#e74a3b']
+    chartPieAnual = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(obj),
+            datasets: [{
+                data: Object.values(obj),
+                backgroundColor: ['#4e73df','#1cc88a','#36b9cc','#f6c23e','#e74a3b']
             }]
         },
-        options:{
-            plugins:{
-                legend:{position:'bottom'},
-                datalabels:{
-                    color:'#fff',
-                    formatter:(value,ctx)=>{
-                        let total=ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
-                        return ((value/total)*100).toFixed(1)+'%';
-                    }
-                }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
             }
         }
     });
