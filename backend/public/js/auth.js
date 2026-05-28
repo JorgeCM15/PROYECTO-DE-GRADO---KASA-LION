@@ -62,7 +62,8 @@ $(document).ready(function () {
     if (!validarToken()) {
         return;
     }
-
+    document.body.style.display = "block";
+    
     // CONTROL DE INACTIVIDAD
     let tiempoInactividad;
     const LIMITE = 15 * 60 * 1000;
