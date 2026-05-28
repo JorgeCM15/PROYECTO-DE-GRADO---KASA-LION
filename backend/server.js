@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
 const app = express();
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
@@ -54,7 +55,7 @@ function verificarToken(req, res, next) {
 }
 
 // REGISTRAR USUARIOS
-app.post('/usuarios', verificarToken, (req, res) => {
+app.post('/usuarios', verificarToken, async (req, res) => {
 
     const {
         nombres,
@@ -73,15 +74,17 @@ app.post('/usuarios', verificarToken, (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
+    const passwordHash = await bcrypt.hash(password, 10);
+
     db.query(sqlUsuario, [
-        nombres,
-        primerApellido,
-        segundoApellido,
-        tipoDocumento,
-        numeroDocumento,
-        correo,
-        password
-    ], (err, result) => {
+    nombres,
+    primerApellido,
+    segundoApellido,
+    tipoDocumento,
+    numeroDocumento,
+    correo,
+    passwordHash
+], (err, result) => {
 
         if (err) {
             console.error(err);
@@ -118,13 +121,13 @@ app.post('/usuarios', verificarToken, (req, res) => {
 });
 
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
 
     const { correo, password } = req.body;
 
     const sql = "SELECT * FROM usuarios WHERE correo = ?";
 
-    db.query(sql, [correo], (err, results) => {
+    db.query(sql, [correo], async (err, results) => {
 
         if (err) {
             console.error(err);
@@ -132,14 +135,23 @@ app.post('/login', (req, res) => {
         }
 
         if (results.length === 0) {
-            return res.status(401).json({ error: "Usuario no encontrado" });
+            return res.status(401).json({
+                error: "Usuario no encontrado"
+            });
         }
 
         const usuario = results[0];
 
-        // VALIDACIÓN SIMPLE (texto plano)
-        if (usuario.password !== password) {
-            return res.status(401).json({ error: "Contraseña incorrecta" });
+        // VALIDAR PASSWORD HASH
+        const passwordCorrecta = await bcrypt.compare(
+            password,
+            usuario.password
+        );
+
+        if (!passwordCorrecta) {
+            return res.status(401).json({
+                error: "Contraseña incorrecta"
+            });
         }
 
         // OBTENER MÓDULOS
@@ -277,7 +289,7 @@ app.post('/recuperar-password', async (req, res) => {
 });
 
 //CAMBIAR CONTRASEÑA
-app.post('/cambiar-password', (req, res) => {
+app.post('/cambiar-password', async (req, res) => {
 
     const { token, password } = req.body;
 
@@ -300,14 +312,14 @@ app.post('/cambiar-password', (req, res) => {
     }
 
     const correo = data.correo;
-
+    const passwordHash = await bcrypt.hash(password, 10);
     const sql = `
         UPDATE usuarios 
         SET password = ?
         WHERE TRIM(LOWER(correo)) = TRIM(LOWER(?))
     `;
 
-    db.query(sql, [password, correo], (err, result) => {
+    db.query(sql, [passwordHash, correo], (err, result) => {
 
         if (err) {
             console.error("Error actualizando contraseña:", err);
