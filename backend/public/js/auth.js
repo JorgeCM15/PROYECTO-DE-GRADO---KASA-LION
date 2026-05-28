@@ -1,12 +1,13 @@
 // FUNCIONES GLOBALES
 
-function cerrarSesion() {
-    alert("Sesión cerrada");
+function cerrarSesion(redireccionar = true) {
 
     localStorage.removeItem("usuarioActivo");
     localStorage.removeItem("token");
 
-    window.location.href = "login.html";
+    if (redireccionar) {
+        window.location.replace("login.html");
+    }
 }
 
 function parseJwt(token) {
@@ -180,8 +181,6 @@ $(document).ready(function () {
 $(document).ajaxError(function (event, jqxhr) {
 
     if (jqxhr.status === 401 || jqxhr.status === 403) {
-
-        alert("Sesión expirada, inicia sesión nuevamente");
 
         localStorage.removeItem("token");
         localStorage.removeItem("usuarioActivo");
